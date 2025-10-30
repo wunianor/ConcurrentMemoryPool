@@ -1,0 +1,89 @@
+#include <cstdlib>
+#include <exception>
+
+template<class T>
+class FixedSizeMemoryPool
+{
+	/// <summary>
+	/// 当前连续未使用内存的起始地址
+	/// </summary>
+	char* _curContiguousMemory = nullptr;
+
+	/// <summary>
+	/// 每次向系统申请内存的固定大小
+	/// </summary>
+	const size_t _REQUESTED_MEMORY_SIZE = 8 * 1024; 
+
+	/// <summary>
+	/// 当前整块连续未使用内存的大小,
+	/// 此变量会比_requestedMemorySize晚初始化
+	/// </summary>
+	size_t _remainingContiguousMemorySize = 0;
+
+	/// <summary>
+	/// 碎片内存空间链表,
+	/// 还给定长内存池的碎片内存 链在这个链表上,
+	/// 该指针指向链表中第一个节点
+	/// </summary>
+	void* _fragmentedMemoryList = nullptr;
+
+public:
+	/// <summary>
+	/// 从定长内存池中new一个T类型对象
+	/// </summary>
+	/// <returns>返回一个T类型对象指针</returns>
+	T* New()
+	{
+		T* obj = nullptr;
+
+		if (_fragmentedMemoryList) //优先使用碎片内存空间链表上的空间
+		{
+			//碎片内存空间链表 头删
+			obj = static_cast<T*>(_fragmentedMemoryList);
+			//*(static_cast<void**>)可以解决在32位平台和64位平台运行的问题,
+			//并且逻辑上_fragmentedMemoryList指向的内存空间起始地址也确实是一个二级指针,
+			//存的是另一个碎片内存空间的地址
+			_fragmentedMemoryList = *(reinterpret_cast<void**>(_fragmentedMemoryList)); 
+		}
+		else 
+		{
+			if (_remainingContiguousMemorySize < sizeof(T)) //如果连续内存空间的剩余大小 小于 T类型大小
+			{
+				_curContiguousMemory = static_cast<char*>(malloc(_REQUESTED_MEMORY_SIZE));
+				if (nullptr == _curContiguousMemory) //如果申请内存失败
+				{
+					throw std::bad_alloc();
+				}
+
+				_remainingContiguousMemorySize = _REQUESTED_MEMORY_SIZE;
+			}
+
+			obj = reinterpret_cast<T*>(_curContiguousMemory);
+			//如果sizeof(T)<sizeof(void*),
+			//则分配sizeof(void*)的大小,
+			//确保_fragmentedMemoryList中的结点的地址能够存的下
+			size_t objMemorySize = std::max(sizeof(T), sizeof(void*)); 
+			_curContiguousMemory += objMemorySize;   //更新连续内存空间的起始地址
+			_remainingContiguousMemorySize -= objMemorySize; //更新剩余连续内存空间的大小
+		}
+
+		//使用定位new初始化T类型对象
+		new (obj) T;
+
+		return obj;
+	}
+
+	/// <summary>
+	/// 释放一个T类型对象
+	/// </summary>
+	/// <param name="obj">T类型对象的指针</param>
+	void Delete(T* obj)
+	{
+		//调用T类型对象析构函数
+		obj->~T();
+
+		//碎片内存空间链表 头插
+		*(reinterpret_cast<void**>(obj)) = _fragmentedMemoryList;//*(static_cast<void**>)可以解决在32位平台和64位平台运行的问题
+		_fragmentedMemoryList = obj; //更新链表头结点
+	}
+};
