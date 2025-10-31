@@ -1,26 +1,32 @@
 ﻿#include <iostream>
 #include <ctime>
 #include <vector>
+#include <thread>
 using std::cout;
 using std::endl;
 
+#include "Common.h"
 #include "FixedSizeMemoryPool.hpp"
+#include "ThreadCache.h"
 #include "ConcurrentMemoryPool.h"
 
-using namespace std;
+
 
 
 struct TreeNode
 {
-	int val = 0;
+	int val = 100;
 	TreeNode* left = nullptr;
 	TreeNode* right = nullptr;
+	TreeNode* right1 = nullptr;
+	TreeNode* right2 = nullptr;
+
 };
 
 void CompareNewAndFixedSizeMemoryPool()
 {
 	int round = 10;
-	int nodeNum = 1000000;
+	int nodeNum = 100000;
 
 	std::vector<TreeNode*> v1, v2;
 	v1.resize(nodeNum);
@@ -52,7 +58,7 @@ void CompareNewAndFixedSizeMemoryPool()
 		for (int j = 0; j < nodeNum; ++j)
 		{
 			v2[j] = memPool.New();
-			//cout << "v2-" << j << ":" << v2[j] << endl;
+			//cout << "v2-" << j << ":" << v2[j] << " v2[j]->val=" << v2[j]->val << endl;
 		}
 		for (int j = 0; j < nodeNum; ++j)
 		{
@@ -64,10 +70,46 @@ void CompareNewAndFixedSizeMemoryPool()
 	cout << "FixedSizeMemoryPool:" << end - begin << endl;
 }
 
+
+
+
+void allocate1()
+{
+	TLSThreadCache = new ThreadCache();
+	cout << std::this_thread::get_id() << ":" << TLSThreadCache << endl;
+	for (int i = 0; i < 10; ++i)
+	{
+		void* ptr = TLSThreadCache->allocate(6);
+	}
+
+}
+
+void allocate2()
+{
+	TLSThreadCache = new ThreadCache();
+	cout << std::this_thread::get_id() << ":" << TLSThreadCache << endl;
+	for (int i = 0; i < 10; ++i)
+	{
+		void* ptr = TLSThreadCache->allocate(9);
+	}
+
+}
+
+
+void testTLS()
+{
+	std::thread t1(allocate1);
+	std::thread t2(allocate2);
+
+
+	t1.join();
+	t2.join();
+}
+
 int main()
 {
-	CompareNewAndFixedSizeMemoryPool();
-
+	//CompareNewAndFixedSizeMemoryPool();
+	testTLS();
 
 
 

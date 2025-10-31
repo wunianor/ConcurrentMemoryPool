@@ -1,5 +1,6 @@
-#include <cstdlib>
-#include <exception>
+#pragma once
+
+#include "Common.h"
 
 template<class T>
 class FixedSizeMemoryPool
@@ -12,7 +13,7 @@ class FixedSizeMemoryPool
 	/// <summary>
 	/// 每次向系统申请内存的固定大小
 	/// </summary>
-	const size_t _REQUESTED_MEMORY_SIZE = 8 * 1024; 
+	static const size_t _REQUESTED_MEMORY_SIZE = 8 * 1024; 
 
 	/// <summary>
 	/// 当前整块连续未使用内存的大小,
@@ -22,10 +23,9 @@ class FixedSizeMemoryPool
 
 	/// <summary>
 	/// 碎片内存空间链表,
-	/// 还给定长内存池的碎片内存 链在这个链表上,
-	/// 该指针指向链表中第一个节点
+	/// 还给定长内存池的碎片内存 链在这个链表上
 	/// </summary>
-	void* _fragmentedMemoryList = nullptr;
+	FragmentedMemoryList _fragmentedMemoryList;
 
 public:
 	/// <summary>
@@ -36,14 +36,9 @@ public:
 	{
 		T* obj = nullptr;
 
-		if (_fragmentedMemoryList) //优先使用碎片内存空间链表上的空间
+		if (!_fragmentedMemoryList.empty()) //优先使用碎片内存空间链表上的空间
 		{
-			//碎片内存空间链表 头删
-			obj = static_cast<T*>(_fragmentedMemoryList);
-			//*(static_cast<void**>)可以解决在32位平台和64位平台运行的问题,
-			//并且逻辑上_fragmentedMemoryList指向的内存空间起始地址也确实是一个二级指针,
-			//存的是另一个碎片内存空间的地址
-			_fragmentedMemoryList = *(reinterpret_cast<void**>(_fragmentedMemoryList)); 
+			obj = (T*)(_fragmentedMemoryList.pop());
 		}
 		else 
 		{
@@ -82,8 +77,6 @@ public:
 		//调用T类型对象析构函数
 		obj->~T();
 
-		//碎片内存空间链表 头插
-		*(reinterpret_cast<void**>(obj)) = _fragmentedMemoryList;//*(static_cast<void**>)可以解决在32位平台和64位平台运行的问题
-		_fragmentedMemoryList = obj; //更新链表头结点
+		_fragmentedMemoryList.push(obj);
 	}
 };
