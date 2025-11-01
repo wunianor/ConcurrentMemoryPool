@@ -77,10 +77,12 @@ void allocate1()
 {
 	TLSThreadCache = new ThreadCache();
 	cout << std::this_thread::get_id() << ":" << TLSThreadCache << endl;
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 1024; ++i)
 	{
-		void* ptr = TLSThreadCache->allocate(6);
+		void* ptr = TLSThreadCache->allocate(rand() % 8 + 1);
 	}
+
+	TLSThreadCache->allocate(8);
 
 }
 
@@ -88,9 +90,9 @@ void allocate2()
 {
 	TLSThreadCache = new ThreadCache();
 	cout << std::this_thread::get_id() << ":" << TLSThreadCache << endl;
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 100000; ++i)
 	{
-		void* ptr = TLSThreadCache->allocate(9);
+		void* ptr = TLSThreadCache->allocate(rand() % 8 + 1);
 	}
 
 }
@@ -99,15 +101,16 @@ void allocate2()
 void testTLS()
 {
 	std::thread t1(allocate1);
-	std::thread t2(allocate2);
+	//std::thread t2(allocate2);
 
 
 	t1.join();
-	t2.join();
+	//t2.join();
 }
 
 int main()
 {
+	srand(time(nullptr));
 	//CompareNewAndFixedSizeMemoryPool();
 	testTLS();
 

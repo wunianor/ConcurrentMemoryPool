@@ -12,7 +12,7 @@ endif()
 project ("高并发内存池")
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (CMakeTarget "testCode.cpp" "ConcurrentMemoryPool.h" "FixedSizeMemoryPool.hpp"  "Common.h" "ThreadCache.h" "FragmentedMemoryList.h" "ThreadCache.cpp")
+add_executable (CMakeTarget "testCode.cpp" "ConcurrentMemoryPool.h" "FixedSizeMemoryPool.hpp"  "Common.h" "ThreadCache.h" "FragmentedMemoryList.h" "ThreadCache.cpp" "CentralCache.h" "CentralCache.cpp" "PageCache.h" "PageCache.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET CMakeTarget PROPERTY CXX_STANDARD 20)
