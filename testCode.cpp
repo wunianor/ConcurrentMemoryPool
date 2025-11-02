@@ -77,10 +77,21 @@ void allocate1()
 {
 	TLSThreadCache = new ThreadCache();
 	cout << std::this_thread::get_id() << ":" << TLSThreadCache << endl;
-	for (int i = 0; i < 1024; ++i)
+
+	void* ptr1 = 0;
+	size_t size1 = 0;
+	for (int i = 0; i < 1024*127; ++i)
 	{
-		void* ptr = TLSThreadCache->allocate(rand() % 8 + 1);
+		int size = 8;
+		void* ptr = TLSThreadCache->allocate(size);
+		if (i == 0)
+		{
+			ptr1 = ptr;
+			size1 = size;
+		}
 	}
+
+
 
 	TLSThreadCache->allocate(8);
 
