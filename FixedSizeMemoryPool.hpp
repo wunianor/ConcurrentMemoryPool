@@ -57,7 +57,7 @@ public:
 			//如果sizeof(T)<sizeof(void*),
 			//则分配sizeof(void*)的大小,
 			//确保_fragmentedMemoryList中的结点的地址能够存的下
-			size_t objMemorySize = std::max(sizeof(T), sizeof(void*)); 
+			size_t objMemorySize = max(sizeof(T), sizeof(void*)); 
 			_curContiguousMemory += objMemorySize;   //更新连续内存空间的起始地址
 			_remainingContiguousMemorySize -= objMemorySize; //更新剩余连续内存空间的大小
 		}

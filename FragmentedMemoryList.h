@@ -28,6 +28,10 @@ class FragmentedMemoryList
 	/// </summary>
 	void* _head = nullptr;
 
+	/// <summary>
+	/// 链表内碎片内存的数量
+	/// </summary>
+	size_t _size = 0;
 
 	/// <summary>
 	/// 该链表下一次从CentralCache获取碎片内存的数量
@@ -47,6 +51,7 @@ public:
 		nextMemoryNode(fragmentedMemory) = _head;
 		_head = fragmentedMemory;
 
+		++_size;
 	}
 
 	/// <summary>
@@ -55,13 +60,16 @@ public:
 	/// </summary>
 	/// <param name="begin">链表的第一个结点</param>
 	/// <param name="end">链表的最后一个结点</param>
-	void pushRange(void* begin, void* end)
+	/// <param name="size">链表的大小</param>
+	void pushRange(void* begin, void* end, size_t size)
 	{
 		assert(nullptr != begin);
 		assert(nullptr != end);
 
 		nextMemoryNode(end) = _head;
 		_head = begin;
+
+		_size += size;
 	}
 
 	/// <summary>
@@ -73,7 +81,7 @@ public:
 	/// </returns>
 	void* pop()
 	{
-		if(nullptr == _head)
+		if (nullptr == _head || size() == 0)
 		{
 			return nullptr;
 		}
@@ -81,11 +89,14 @@ public:
 		void* fragmentedMemory = _head;
 		_head = nextMemoryNode(_head);
 
+		--_size;
+
 		return fragmentedMemory;
 	}
 
 	/// <summary>
-	/// 从链表中头删(获取)一定数量的碎片内存
+	/// 从链表中头删(获取)一定数量的碎片内存,
+	/// 并且end->next会置为nullptr
 	/// </summary>
 	/// <param name="expectedNum">期望头删(获取)的数量</param>
 	/// <param name="start">输出型参数,获取到的链表的第一个结点</param>
@@ -111,8 +122,11 @@ public:
 			++actualNum;
 		}
 
-		//更新链表头结点
-		_head = nextMemoryNode(end);
+		_head = nextMemoryNode(end);//更新链表头结点
+
+		nextMemoryNode(end) = nullptr;//将end->next置为nullptr
+
+		_size -= actualNum; //更新链表内碎片内存的数量
 
 		return actualNum;
 		
@@ -126,6 +140,25 @@ public:
 	{
 		if (nullptr == _head) return true;
 		return false;
+	}
+
+	/// <summary>
+	/// 将对象重置为空状态:将头指针置为 nullptr,大小置为 0,并将下次从CentralCache获取碎片化内存的计数器重置为 1
+	/// </summary>
+	void setEmpty()
+	{
+		_head = nullptr;
+		_size = 0;
+		_nextFetchFragmentedMemoryNumFromCentralCache = 1;
+	}
+
+	/// <summary>
+	/// 获取链表内碎片内存的数量
+	/// </summary>
+	/// <returns>返回链表内碎片内存的数量</returns>
+	size_t size()
+	{
+		return _size;
 	}
 
 	/// <summary>

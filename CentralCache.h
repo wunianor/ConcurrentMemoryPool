@@ -41,7 +41,12 @@ public:
 	/// <returns>返回唯一的CentralCache实例</returns>
 	static CentralCache* getInstance();
 
-
+	/// <summary>
+	/// 从spanList中获取一个SpanNode
+	/// </summary>
+	/// <param name="spanList">表示从哪个spanList中获取SpanNode</param>
+	/// <param name="alignedSize">对齐之后的字节数</param>
+	/// <returns>返回一个SpanNode的地址</returns>
 	SpanNode* getOneSpanNode(SpanList& spanList, size_t alignedSize);
 
 	/// <summary>
@@ -54,6 +59,8 @@ public:
 	/// <param name="end">输出型参数,碎片内存链表的最后一个结点</param>
 	/// <returns>返回实际获取到的数量</returns>
 	size_t fetchRangeFramentedMemory(size_t alignedBytes, size_t expectedNum, void*& start, void*& end);
+
+	void freeListToCentrealCacheSpans(size_t index,void* begin, void* end);
 };
 
 

@@ -1,14 +1,30 @@
 #pragma once
 
+#include <iostream>
+#include <unordered_map>
 #include <exception>
 #include <mutex>
 
+
 #include <cstdlib>
 #include <cassert>
+#include <errno.h>
 
-
+#ifdef WIN32
+	#include <windows.h>
+#elif defined(__unix__) || defined(__APPLE__) 
+	#include <unistd.h>
+	#include <sys/mman.h>
+#else
+	#error "unknown platform"
+#endif
 
 #include "FragmentedMemoryList.h"
+
+
+#define BAD_ALLOC 1
+
+//#define DEBUG
 
 
 /// <summary>
@@ -27,9 +43,65 @@ const size_t MAX_ALLOCATE_BYTES = 256 * 1024;
 const size_t PAGE_CACHE_SPAN_LIST_NUM = 128;
 
 /// <summary>
+/// 一个spanNode内最多能拥有的page的数量
+/// </summary>
+const size_t MAX_PAGENUM_IN_SPANNODE = PAGE_CACHE_SPAN_LIST_NUM;
+
+/// <summary>
 /// log2(一个页的大小(8KB))
 /// </summary>
 const size_t PAGE_SHIFT = 13;
+
+
+
+/// <summary>
+/// 向系统申请一块内存
+/// </summary>
+/// <param name="size">内存大小</param>
+/// <returns>
+/// 申请成功,返回内存起始地址;
+/// 申请失败,返回nullptr
+/// </returns>
+static void* systemMemoryAlloc(size_t size)
+{
+	void* ptr = nullptr;
+
+#ifdef WIN32
+	ptr = VirtualAlloc(
+		NULL,                          // 系统自动分配地址（天然页对齐）
+		size,		                   // 申请的内存大小
+		MEM_RESERVE | MEM_COMMIT,      // 核心参数：保留地址空间+提交物理内存
+		PAGE_READWRITE                 // 仅读写权限（安全无执行）
+	);
+
+	if(NULL == ptr)
+	{
+		ptr = nullptr;
+	}
+
+#elif defined(__unix__) || defined(__APPLE__) 
+	ptr = mmap(
+		NULL,                          // 内核自动分配地址（天然页对齐）
+		size,		                   // 申请的内存大小
+		PROT_READ | PROT_WRITE,        // 仅读写权限（安全无执行）
+		MAP_PRIVATE | MAP_ANONYMOUS,   // 匿名+私有映射（无文件IO，进程独占）
+		-1,                            // 匿名映射无需文件描述符
+		0                              // 偏移量必须为 0
+	);
+
+	if (MAP_FAILED == ptr)
+	{
+		ptr = nullptr;
+	}
+
+#else
+	#error "unknown platform"
+#endif
+
+	return ptr;
+}
+
+
 
 /// <summary>
 /// 计算工具类
@@ -56,7 +128,7 @@ class CalculcateTool
 	/// <returns>返回bytes对应桶(链表)的索引</returns>
 	static size_t _calculateIndex(size_t bytes, size_t alignedShift)
 	{
-		return ((bytes + (1 << alignedShift) - 1) >> alignedShift) - 1;
+		return ((bytes + (1LL << alignedShift) - 1) >> alignedShift) - 1;
 	}
 
 public:
@@ -191,13 +263,16 @@ public:
 	}
 };
 
-
+/// <summary>
+/// Span节点类
+/// </summary>
 struct SpanNode
 {
 	/// <summary>
-	/// 该Span内第一个page的起始地址
+	/// 该Span内第一个page的页号,
+	/// 即该Span内第一个page的起始地址>>13
 	/// </summary>
-	void* _firstPageStartAddress = nullptr;
+	size_t _firstPageId = 0;
 
 	/// <summary>
 	/// 该Span内有多少个page
@@ -222,13 +297,20 @@ struct SpanNode
 	size_t _useCount = 0;
 
 	/// <summary>
+	/// 表示该spanNode是否被CentralCache使用
+	/// </summary>
+	bool _isUse = false;
+
+	/// <summary>
 	/// 碎片内存链表
 	/// </summary>
 	FragmentedMemoryList _fragmentedMemoryList;
 
 };
 
-
+/// <summary>
+/// Span链表类
+/// </summary>
 class SpanList
 {
 	/// <summary>
@@ -306,7 +388,7 @@ public:
 		SpanNode* prev = pos->_prev;
 		SpanNode* next = pos->_next;
 
-		prev->_next = next;
+		prev->_next = next;  
 		next->_prev = prev;
 	}
 

@@ -37,7 +37,7 @@ public:
 };
 
 /// <summary>
-/// 每个线程独占的ThreadCache
+/// 每个线程独占的ThreadCache(线程局部存储)
 /// </summary>
 static _declspec(thread) ThreadCache* TLSThreadCache = nullptr;//static保证其只在当前文件可见
 
