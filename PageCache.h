@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Common.h"
+#include "SpanList.h"
+#include "SystemMemoryAlloc.h"
 
-#define BAD_ALLOC 1
 
 class PageCache
 {
@@ -21,6 +22,12 @@ class PageCache
 	/// pageCache层的互斥锁
 	/// </summary>
 	std::mutex _pageMutex;
+
+	/// <summary>
+	/// pageCache对象池
+	/// 实际上这个对象池内只会有一个对象
+	/// </summary>
+	static FixedSizeMemoryPool<PageCache> _pageCacheObjPool;
 
 	/// <summary>
 	/// PageCache的唯一实例
@@ -47,19 +54,39 @@ public:
 	/// <returns>返回一个有pageNum个page的Span</returns>
 	SpanNode* fetchPageNumSpan(size_t pageNum);
 
-
+	/// <summary>
+	/// 查找pageId所在的spanNode
+	/// </summary>
+	/// <param name="pageId">页号</param>
+	/// <returns>返回pageId所在的spanNode</returns>
 	SpanNode* pageIdMapSpanNode(size_t pageId);
 
-	void freeSpanToPageCache(SpanNode* spanNode);
+	/// <summary>
+	/// 向PageCache释放spanNode
+	/// </summary>
+	/// <param name="spanNode">需要释放的spanNode</param>
+	void freeSpanNodeToPageCache(SpanNode* spanNode);
 
 	/// <summary>
 	/// 申请锁
+	/// 
+	/// 注意:
+	/// .h和.cpp分离会导致lock()不是inline的,对性能影响不大;
+	/// 但是,如果是inline的话,vs2022的性能监视器显示不出该函数的总执行时间
 	/// </summary>
 	void lock();
 
 	/// <summary>
 	/// 释放锁
+	///
+	/// 注意:
+	/// .h和.cpp分离会导致unlock()不是inline的,对性能影响不大;
+	/// 但是,如果是inline的话,vs2022的性能监视器显示不出该函数的总执行时间
 	/// </summary>
 	void unlock();
 
 };
+
+
+
+

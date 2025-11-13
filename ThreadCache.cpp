@@ -1,10 +1,11 @@
 #include "ThreadCache.h"
 
 
+
 void* ThreadCache::fetchFromCentralCache(size_t index, size_t alignedBytes)
 {
 	assert(0 <= index && index < FRAMENTED_MEMORY_LIST_NUM);
-	assert(1 <= alignedBytes && alignedBytes <= MAX_ALLOCATE_BYTES);
+	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
 	/*
 		慢开始获取碎片内存算法
@@ -14,10 +15,10 @@ void* ThreadCache::fetchFromCentralCache(size_t index, size_t alignedBytes)
 			alignedBytes越小,预期获取到的个数就越多;
 	*/
 	//计算预期从CentralCache层批量获取的碎片内存的个数
-	size_t expectedFragmentedMemoryNum = min(_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache(), CalculcateTool::calculateFetchFragmentedMemoryNum(alignedBytes));
+	size_t expectedFragmentedMemoryNum = min(_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache(), CalculateTool::calculateFetchFragmentedMemoryNum(alignedBytes));
 
 	assert(_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache() > 0);
-	assert(CalculcateTool::calculateFetchFragmentedMemoryNum(alignedBytes) > 0);
+	assert(CalculateTool::calculateFetchFragmentedMemoryNum(alignedBytes) > 0);
 
 	if (expectedFragmentedMemoryNum == _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache())
 	{
@@ -46,10 +47,10 @@ void* ThreadCache::fetchFromCentralCache(size_t index, size_t alignedBytes)
 void* ThreadCache::allocate(size_t bytes)
 {
 	if (0 == bytes) return nullptr;
-	assert(1 <= bytes && bytes <= MAX_ALLOCATE_BYTES);
+	assert(1 <= bytes && bytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
-	size_t alignedBytes = CalculcateTool::calculateAlignedBytes(bytes); //计算bytes对齐后的字节数
-	size_t index = CalculcateTool::calculateIndex(bytes); //计算bytes对应链表的索引
+	size_t alignedBytes = CalculateTool::calculateAlignedBytes(bytes); //计算bytes对齐后的字节数
+	size_t index = CalculateTool::calculateIndex(bytes); //计算bytes对应链表的索引
 
 	if (!_fragmentedMemoryList[index].empty()) //优先从size对应的碎片内存链表申请
 	{
@@ -61,17 +62,13 @@ void* ThreadCache::allocate(size_t bytes)
 	}
 }
 
-void ThreadCache::deallocate(void* ptr, size_t bytes)
+void ThreadCache::deallocate(void* ptr,size_t bytes)
 {
-	if (ptr == nullptr) return;
+	if (nullptr != ptr) return;
 
-	assert(nullptr != ptr);
-	assert(1 <= bytes && bytes <= MAX_ALLOCATE_BYTES);
-
-	size_t index = CalculcateTool::calculateIndex(bytes); //计算size对应链表的索引
+	size_t index = CalculateTool::calculateIndex(bytes); //计算ptr对应链表的索引
 
 	_fragmentedMemoryList[index].push(ptr);
-
 
 	if (_fragmentedMemoryList[index].size() >= _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache())
 	{
@@ -79,10 +76,10 @@ void ThreadCache::deallocate(void* ptr, size_t bytes)
 		void* end = nullptr;
 		_fragmentedMemoryList[index].popRange(_fragmentedMemoryList[index].size(), begin, end); //将该链表内所有的碎片内存都弹出
 
-		/*size_t nextNum = _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache();
-		_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache() = min(nextNum - 1, (size_t)1);*/
+		//将 下一次从CentralCache批量获取碎片内存的数量 -1 ,并与1求max()
+		size_t nextNum = _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache();
+		_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache() = max(nextNum - 1, (size_t)1);
 
-
-		CentralCache::getInstance()->freeListToCentrealCacheSpans(index, begin, end);
+		CentralCache::getInstance()->freeListToCentrealCacheSpans(index, begin);
 	}
 }

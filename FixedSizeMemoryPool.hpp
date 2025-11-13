@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include "SystemMemoryAlloc.h"
 
 template<class T>
 class FixedSizeMemoryPool
@@ -11,13 +12,7 @@ class FixedSizeMemoryPool
 	char* _curContiguousMemory = nullptr;
 
 	/// <summary>
-	/// 每次向系统申请内存的固定大小
-	/// </summary>
-	static const size_t _REQUESTED_MEMORY_SIZE = 8 * 1024; 
-
-	/// <summary>
 	/// 当前整块连续未使用内存的大小,
-	/// 此变量会比_requestedMemorySize晚初始化
 	/// </summary>
 	size_t _remainingContiguousMemorySize = 0;
 
@@ -44,16 +39,17 @@ public:
 		{
 			if (_remainingContiguousMemorySize < sizeof(T)) //如果连续内存空间的剩余大小 小于 T类型大小
 			{
-				_curContiguousMemory = static_cast<char*>(malloc(_REQUESTED_MEMORY_SIZE));
+				size_t allocMemorySize = max((1 << PAGE_SHIFT), (sizeof(T) / (1 << PAGE_SHIFT) + 1) * (1 << PAGE_SHIFT));
+				_curContiguousMemory = (char*)systemMemoryAlloc(allocMemorySize);
 				if (nullptr == _curContiguousMemory) //如果申请内存失败
 				{
 					throw std::bad_alloc();
 				}
 
-				_remainingContiguousMemorySize = _REQUESTED_MEMORY_SIZE;
+				_remainingContiguousMemorySize = allocMemorySize;
 			}
 
-			obj = reinterpret_cast<T*>(_curContiguousMemory);
+			obj = (T*)(_curContiguousMemory);
 			//如果sizeof(T)<sizeof(void*),
 			//则分配sizeof(void*)的大小,
 			//确保_fragmentedMemoryList中的结点的地址能够存的下
@@ -63,7 +59,7 @@ public:
 		}
 
 		//使用定位new初始化T类型对象
-		new (obj) T;
+		new (obj) T();
 
 		return obj;
 	}

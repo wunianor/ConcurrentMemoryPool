@@ -1,8 +1,23 @@
-﻿// 高并发内存池.h: 标准系统包含文件的包含文件
-// 或项目特定的包含文件。
+﻿
+#include "Common.h"
+#include "ThreadCache.h"
+#include "PageCache.h"
 
-#pragma once
 
-#include <iostream>
 
-// TODO: 在此处引用程序需要的其他标头。
+
+
+/// <summary>
+/// 高并发申请内存
+/// </summary>
+/// <param name="size">申请内存的大小</param>
+/// <returns>返回申请到的指针</returns>
+void* ConcurrentAlloc(size_t size);
+
+
+
+/// <summary>
+/// 高并发释放内存
+/// </summary>
+/// <param name="ptr">释放的内存的地址</param>
+void ConcurrentFree(void* ptr);

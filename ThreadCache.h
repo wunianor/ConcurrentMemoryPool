@@ -1,6 +1,8 @@
 #pragma once
 #include "Common.h"
+#include "CalculateTool.h"
 #include "CentralCache.h"
+#include "PageCache.h"
 
 
 
@@ -12,6 +14,7 @@ class ThreadCache
 	FragmentedMemoryList _fragmentedMemoryList[FRAMENTED_MEMORY_LIST_NUM];
 
 public:
+	
 	/// <summary>
 	/// 分配指定大小的内存并返回指向该内存的指针。
 	/// </summary>
@@ -23,7 +26,7 @@ public:
 	/// 释放之前分配的内存块
 	/// </summary>
 	/// <param name="ptr">指向要释放的内存块的起始地址</param>
-	/// <param name="bytes">要释放的内存块的大小</param>
+	/// <param name="bytes>要释放的内存块的大小</param>
 	void deallocate(void* ptr, size_t bytes);
 
 
@@ -41,5 +44,9 @@ public:
 /// </summary>
 static _declspec(thread) ThreadCache* TLSThreadCache = nullptr;//static保证其只在当前文件可见
 
-
+/// <summary>
+/// 每个线程独占的threadCache对象池(线程局部存储),
+/// 实际上这个对象池内只会有一个对象
+/// </summary>
+static _declspec(thread) FixedSizeMemoryPool<ThreadCache> TLSthreadCacheObjPool;
 

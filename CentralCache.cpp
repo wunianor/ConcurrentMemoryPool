@@ -1,16 +1,16 @@
 #include "CentralCache.h"
 
 
-CentralCache::CentralCache(){}
-
-
-
+//初始化CentralCache对象池
+FixedSizeMemoryPool<CentralCache> CentralCache::_centralCacheObjPool;
 
 //nullptr初始化唯一CentralCache实例
 CentralCache* CentralCache::_instance = nullptr;
 
 //初始化创建唯一CentralCache实例的互斥锁
 std::mutex CentralCache::_createInstanceMutex;
+
+CentralCache::CentralCache() {}
 
 CentralCache* CentralCache::getInstance()
 {
@@ -19,7 +19,7 @@ CentralCache* CentralCache::getInstance()
 		std::unique_lock<std::mutex> lock(_createInstanceMutex);
 		if (nullptr == _instance)
 		{
-			_instance = new CentralCache;
+			_instance = _centralCacheObjPool.New();
 		}
 	}
 
@@ -29,7 +29,7 @@ CentralCache* CentralCache::getInstance()
 
 SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 {
-	assert(1 <= alignedBytes && alignedBytes <= MAX_ALLOCATE_BYTES);
+	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
 	//先去spanList里面去寻找有未分配内存的Span
 	SpanNode* it = spanList.begin();
@@ -49,24 +49,26 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 	//从pageCache获取一个span
 	spanList.unlock(); //释放spanList的锁,让其他释放碎片内存的线程可以进来
 	PageCache::getInstance()->lock();
-	SpanNode* span = PageCache::getInstance()->fetchPageNumSpan(CalculcateTool::calculateFetchPageNum(alignedBytes));
-	span->_isUse = true;
+	SpanNode* span = PageCache::getInstance()->fetchPageNumSpan(CalculateTool::calculateFetchPageNum(alignedBytes));
 	PageCache::getInstance()->unlock();
 	
 
 	//将span内的多个page切成小块的碎片空间,并链接成链表
 	char* begin = (char*)((span->_firstPageId) << PAGE_SHIFT);//多个page的起始地址
 	char* end = begin + span->_pageNum * (1 << PAGE_SHIFT); //多个page的末尾地址,[begin,end)
-	char* tail = begin; //当前链表的最后一个结点
+	char* tail = begin; //当前链表的最后一个结点(的起始地址),[begin,tail],tail->next=nullptr
+	char* tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1; //tail结点的下一个结点的最后一个地址
 	size_t count = (end - begin) / alignedBytes;//碎片内存的数量
-	while (tail + alignedBytes < end)
+	while (tailNextNodeTailAddress < end)
 	{
 		nextMemoryNode(tail) = tail + alignedBytes;
-		tail = (char*)nextMemoryNode(tail);
+		tail = (char*)nextMemoryNode(tail); //更新tail结点
+		tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1;
 	}
 	nextMemoryNode(tail) = nullptr; //最后一个结点的next设为nullptr
 
 	span->_fragmentedMemoryList.pushRange(begin, tail, count);
+	span->_fragmentedMemorySize = alignedBytes;
 
 	spanList.lock();
 	spanList.pushFront(span);
@@ -77,10 +79,10 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 
 size_t CentralCache::fetchRangeFramentedMemory(size_t alignedBytes, size_t expectedNum,void*& start, void*& end)
 {
-	assert(1 <= alignedBytes && alignedBytes <= MAX_ALLOCATE_BYTES);
+	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 	assert(expectedNum > 0);
 
-	size_t index = CalculcateTool::calculateIndex(alignedBytes);
+	size_t index = CalculateTool::calculateIndex(alignedBytes);
 
 
 	_spanList[index].lock();
@@ -96,7 +98,7 @@ size_t CentralCache::fetchRangeFramentedMemory(size_t alignedBytes, size_t expec
 }
 
 
-void CentralCache::freeListToCentrealCacheSpans(size_t index, void* begin, void* end)
+void CentralCache::freeListToCentrealCacheSpans(size_t index, void* begin)
 {
 	_spanList[index].lock();
 	
@@ -126,10 +128,9 @@ void CentralCache::freeListToCentrealCacheSpans(size_t index, void* begin, void*
 			spanNode->_next = nullptr;
 			spanNode->_fragmentedMemoryList.setEmpty();
 			
-		
 			_spanList[index].unlock();
 			PageCache::getInstance()->lock();
-			PageCache::getInstance()->freeSpanToPageCache(spanNode);
+			PageCache::getInstance()->freeSpanNodeToPageCache(spanNode);
 			PageCache::getInstance()->unlock();
 			_spanList[index].lock();
 		}

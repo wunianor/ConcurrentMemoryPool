@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Common.h"
+#include "SpanList.h"
+#include "CalculateTool.h"
+#include "FixedSizeMemoryPool.hpp"
 #include "PageCache.h"
 
 
@@ -11,6 +14,11 @@ class CentralCache
 	/// </summary>
 	SpanList _spanList[FRAMENTED_MEMORY_LIST_NUM];
 
+	/// <summary>
+	/// centralCache对象池
+	/// 实际上这个对象池内只会有一个对象
+	/// </summary>
+	static FixedSizeMemoryPool<CentralCache> _centralCacheObjPool;
 
 	/// <summary>
 	/// CentralCache的唯一实例
@@ -60,7 +68,11 @@ public:
 	/// <returns>返回实际获取到的数量</returns>
 	size_t fetchRangeFramentedMemory(size_t alignedBytes, size_t expectedNum, void*& start, void*& end);
 
-	void freeListToCentrealCacheSpans(size_t index,void* begin, void* end);
+	/// <summary>
+	/// 将链表中的每一个碎片内存还给对应的SpanNode
+	/// </summary>
+	/// <param name="index"></param>
+	/// <param name="begin">链表头结点</param>
+	void freeListToCentrealCacheSpans(size_t index, void* begin);
 };
-
 
