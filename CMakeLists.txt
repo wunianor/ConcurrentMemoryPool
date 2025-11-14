@@ -45,7 +45,7 @@ add_executable (CMakeTarget
   "PageCache.h" 
   "PageCache.cpp"  
   "ConcurrentMemoryPool.cpp"
- "SystemMemoryAlloc.h" "SystemMemoryAlloc.cpp" "CalculateTool.cpp" "SpanList.h" "SpanList.cpp"  "FragmentedMemoryList.cpp" )
+ "SystemMemoryAlloc.h" "SystemMemoryAlloc.cpp" "CalculateTool.cpp" "SpanList.h" "SpanList.cpp"  "FragmentedMemoryList.cpp"  "PageMapSpanNode.hpp")
 
 # 第二步：配置编译选项（目标已创建，可安全使用 target_compile_options）
 if (MSVC)

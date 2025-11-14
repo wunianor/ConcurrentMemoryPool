@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "SpanList.h"
 #include "SystemMemoryAlloc.h"
+#include "PageMapSpanNode.hpp"
 
 
 class PageCache
@@ -16,7 +17,9 @@ class PageCache
 	/// <summary>
 	/// pageId到SpanNode*的映射
 	/// </summary>
-	std::unordered_map<size_t, SpanNode*> _pageIdMapSpanNode;
+	//std::unordered_map<size_t, SpanNode*> _pageIdMapSpanNode;
+	TCMalloc_PageMap3<64 - PAGE_SHIFT> _pageIdMapSpanNode;
+
 
 	/// <summary>
 	/// pageCache层的互斥锁
@@ -59,7 +62,16 @@ public:
 	/// </summary>
 	/// <param name="pageId">页号</param>
 	/// <returns>返回pageId所在的spanNode</returns>
-	SpanNode* pageIdMapSpanNode(size_t pageId);
+	SpanNode* getPageIdMapSpanNode(size_t pageId);
+
+
+	/// <summary>
+	/// 设置pageId所在的spanNode
+	/// </summary>
+	/// <param name="pageId">页号</param>
+	/// <param name="spanNode">pageId所在的spanNode</param>
+	/// <returns></returns>
+	void setPageIdMapSpanNode(size_t pageId, SpanNode* spanNode);
 
 	/// <summary>
 	/// 向PageCache释放spanNode
@@ -84,7 +96,6 @@ public:
 	/// 但是,如果是inline的话,vs2022的性能监视器显示不出该函数的总执行时间
 	/// </summary>
 	void unlock();
-
 };
 
 

@@ -76,3 +76,5 @@ public:
 	void freeListToCentrealCacheSpans(size_t index, void* begin);
 };
 
+
+//extern std::atomic<size_t> sum1, sum2, sum3;

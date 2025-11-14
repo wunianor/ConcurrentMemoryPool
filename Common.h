@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <exception>
 #include <mutex>
+#include <atomic>
 
 
 #include <cstdlib>

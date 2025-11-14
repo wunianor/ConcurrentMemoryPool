@@ -1,5 +1,6 @@
 #include "CentralCache.h"
 
+//std::atomic<size_t> sum1 = 0, sum2 = 0, sum3 = 0;
 
 //初始化CentralCache对象池
 FixedSizeMemoryPool<CentralCache> CentralCache::_centralCacheObjPool;
@@ -29,8 +30,15 @@ CentralCache* CentralCache::getInstance()
 
 SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 {
-	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
+	//clock_t begin1, end1;
+	//clock_t begin2, end2;
 
+	//begin1 = clock();
+
+	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
+	
+
+	
 	//先去spanList里面去寻找有未分配内存的Span
 	SpanNode* it = spanList.begin();
 	while (it != spanList.end())
@@ -45,6 +53,8 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 		}
 	}
 
+	
+
 	//走到这里,说明spanList内所有的Span的碎片内存都分配完毕 or 没有Span,
 	//从pageCache获取一个span
 	spanList.unlock(); //释放spanList的锁,让其他释放碎片内存的线程可以进来
@@ -52,27 +62,48 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 	SpanNode* span = PageCache::getInstance()->fetchPageNumSpan(CalculateTool::calculateFetchPageNum(alignedBytes));
 	PageCache::getInstance()->unlock();
 	
-
 	//将span内的多个page切成小块的碎片空间,并链接成链表
 	char* begin = (char*)((span->_firstPageId) << PAGE_SHIFT);//多个page的起始地址
 	char* end = begin + span->_pageNum * (1 << PAGE_SHIFT); //多个page的末尾地址,[begin,end)
 	char* tail = begin; //当前链表的最后一个结点(的起始地址),[begin,tail],tail->next=nullptr
 	char* tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1; //tail结点的下一个结点的最后一个地址
 	size_t count = (end - begin) / alignedBytes;//碎片内存的数量
+
+
+	//begin2 = clock();
+
 	while (tailNextNodeTailAddress < end)
 	{
 		nextMemoryNode(tail) = tail + alignedBytes;
 		tail = (char*)nextMemoryNode(tail); //更新tail结点
 		tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1;
+
 	}
+
+	//end2 = clock();
+	//std::cout << "aligendBytes:" << alignedBytes << " pageNum:" << span->_pageNum << std::endl;
+	//if (span->_pageNum > 31)
+	//{
+	//	int x = 0;
+	//}
+
 	nextMemoryNode(tail) = nullptr; //最后一个结点的next设为nullptr
+
+	
 
 	span->_fragmentedMemoryList.pushRange(begin, tail, count);
 	span->_fragmentedMemorySize = alignedBytes;
 
+	
+
 	spanList.lock();
 	spanList.pushFront(span);
 	
+	//end1 = clock();
+
+
+	//sum1 += end1 - begin1;
+	//sum2 += end2 - begin2;
 
 	return span;
 }
@@ -83,8 +114,7 @@ size_t CentralCache::fetchRangeFramentedMemory(size_t alignedBytes, size_t expec
 	assert(expectedNum > 0);
 
 	size_t index = CalculateTool::calculateIndex(alignedBytes);
-
-
+	
 	_spanList[index].lock();
 
 	SpanNode* spanNode = getOneSpanNode(_spanList[index], alignedBytes);
@@ -92,7 +122,6 @@ size_t CentralCache::fetchRangeFramentedMemory(size_t alignedBytes, size_t expec
 	spanNode->_useCount += actualNum;
 
 	_spanList[index].unlock();
-
 
 	return actualNum;
 }
@@ -109,9 +138,8 @@ void CentralCache::freeListToCentrealCacheSpans(size_t index, void* begin)
 
 		size_t pageId = (size_t)cur >> PAGE_SHIFT; //计算cur所在page的页号
 
-		PageCache::getInstance()->lock();
-		SpanNode* spanNode = PageCache::getInstance()->pageIdMapSpanNode(pageId); //计算page在哪个spanNode内
-		PageCache::getInstance()->unlock();
+
+		SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId); //计算page在哪个spanNode内
 		
 		assert(nullptr != spanNode);
 		

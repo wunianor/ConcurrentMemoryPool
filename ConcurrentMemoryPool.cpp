@@ -38,9 +38,8 @@ void ConcurrentFree(void* ptr)
 
 	size_t pageId = ((size_t)ptr) >> PAGE_SHIFT;//计算ptr所在的page的id
 
-	PageCache::getInstance()->lock();
-	SpanNode* spanNode = PageCache::getInstance()->pageIdMapSpanNode(pageId);//求pageId对应的spanNode
-	PageCache::getInstance()->unlock();
+	//pageId映射SpanNode的数据结构是读写分离的
+	SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId);//求pageId对应的spanNode
 
 	size_t bytes = spanNode->_fragmentedMemorySize;//计算ptr内存块的大小
 

@@ -42,8 +42,8 @@ SpanNode* PageCache::fetchPageNumSpan(size_t pageNum)
 		spanNode->_firstPageId = (size_t)ptr >> PAGE_SHIFT;
 		spanNode->_pageNum = pageNum;
 
-		_pageIdMapSpanNode[spanNode->_firstPageId] = spanNode;
-
+		setPageIdMapSpanNode(spanNode->_firstPageId, spanNode);
+		
 		return spanNode;
 	}
 
@@ -76,8 +76,8 @@ SpanNode* PageCache::fetchPageNumSpan(size_t pageNum)
 
 				//建立i_pageNumSpan内第一个page和最后一个page与i_pageNumSpan的映射,
 				//方便后续合并span用
-				_pageIdMapSpanNode[i_pageNumSpan->_firstPageId] = i_pageNumSpan;
-				_pageIdMapSpanNode[i_pageNumSpan->_firstPageId + i_pageNumSpan->_pageNum - 1] = i_pageNumSpan;
+				setPageIdMapSpanNode(i_pageNumSpan->_firstPageId, i_pageNumSpan);
+				setPageIdMapSpanNode(i_pageNumSpan->_firstPageId + i_pageNumSpan->_pageNum - 1, i_pageNumSpan);
 
 				_spanList[i_pageNumSpan->_pageNum].pushFront(i_pageNumSpan);
 
@@ -92,10 +92,12 @@ SpanNode* PageCache::fetchPageNumSpan(size_t pageNum)
 		//建立pageNumSpan内各个page与pageNumPage的映射,
 		//这些page在CentralCache层内可能会被切分,
 		//所以每个page都要映射
+		//pageIdMapSpanNodeMutexLock();
 		for (size_t j = 0; j < pageNumSpan->_pageNum; ++j)
 		{
-			_pageIdMapSpanNode[pageNumSpan->_firstPageId + j] = pageNumSpan;
+			setPageIdMapSpanNode(pageNumSpan->_firstPageId + j, pageNumSpan);
 		}
+		//pageIdMapSpanNodeMutexUnlock();
 
 		//将pageNumSpan的状态置为正在centralCache内使用
 		pageNumSpan->_isUse = true;
@@ -128,22 +130,38 @@ SpanNode* PageCache::fetchPageNumSpan(size_t pageNum)
 
 	//建立maxSpan内第一个page和最后一个page与maxSpan的映射,
 	//方便后续合并span用
-	_pageIdMapSpanNode[maxSpan->_firstPageId] = maxSpan;
-	_pageIdMapSpanNode[maxSpan->_firstPageId + maxSpan->_pageNum - 1] = maxSpan;
+	setPageIdMapSpanNode(maxSpan->_firstPageId, maxSpan);
+	setPageIdMapSpanNode(maxSpan->_firstPageId + maxSpan->_pageNum - 1, maxSpan);
 
 	_spanList[maxSpan->_pageNum].pushFront(maxSpan);
 
 	return fetchPageNumSpan(pageNum);
 }
 
-SpanNode* PageCache::pageIdMapSpanNode(size_t pageId)
+SpanNode* PageCache::getPageIdMapSpanNode(size_t pageId)
 {
-	auto it = _pageIdMapSpanNode.find(pageId);
+	/*auto it = _pageIdMapSpanNode.find(pageId);
 	if (it == _pageIdMapSpanNode.end())
 	{
 		return nullptr;
 	}
-	return it->second;
+	return it->second;*/
+
+
+	SpanNode* spanNode = (SpanNode*)_pageIdMapSpanNode.get(pageId);
+	if (nullptr == spanNode)
+	{
+		return nullptr;
+	}
+	return spanNode;
+}
+
+void PageCache::setPageIdMapSpanNode(size_t pageId, SpanNode* spanNode)
+{
+	if (_pageIdMapSpanNode.Ensure(pageId, 1))
+	{
+		_pageIdMapSpanNode.set(pageId, spanNode);
+	}
 }
 
 void PageCache::freeSpanNodeToPageCache(SpanNode* spanNode)
@@ -169,14 +187,16 @@ void PageCache::freeSpanNodeToPageCache(SpanNode* spanNode)
 	while (true)
 	{
 		//寻找spanNode在内存上连续的上一个spanNode
-		auto it = _pageIdMapSpanNode.find(spanNode->_firstPageId - 1);
-		if (it == _pageIdMapSpanNode.end()) //如果没找到
+		//pageIdMapSpanNodeMutexLock();
+		SpanNode* prevSpanNode = getPageIdMapSpanNode(spanNode->_firstPageId - 1);
+		//pageIdMapSpanNodeMutexUnlock();
+		if (nullptr == prevSpanNode) //如果没找到
 		{
 			break;
 		}
 
 		//到这里就是找到了
-		SpanNode* prevSpanNode = it->second; //正常情况prevSpanNode此时在_spanList[prevSpanNode->_pageNum]内
+		//正常情况prevSpanNode此时在_spanList[prevSpanNode->_pageNum]内
 
 		//如果prevSpanNode正在被使用,就不合并
 		if (prevSpanNode->_isUse == true) 
@@ -203,13 +223,16 @@ void PageCache::freeSpanNodeToPageCache(SpanNode* spanNode)
 	while (true)
 	{
 		//寻找spanNode在内存上连续的下一个spanNode
-		auto it = _pageIdMapSpanNode.find(spanNode->_firstPageId + spanNode->_pageNum);
-		if (it == _pageIdMapSpanNode.end())
+		//pageIdMapSpanNodeMutexLock();
+		SpanNode* nextSpanNode = getPageIdMapSpanNode(spanNode->_firstPageId + spanNode->_pageNum);
+		//pageIdMapSpanNodeMutexUnlock();
+		if (nullptr == nextSpanNode)
 		{
 			break;
 		}
 
-		SpanNode* nextSpanNode = it->second; //正常情况nextSpanNode在_spanList[nextSpanNode->_pageNum]内
+		//到这里就是找到了
+		//正常情况nextSpanNode在_spanList[nextSpanNode->_pageNum]内
 
 		//如果nextSpanNode正在被使用,就不合并
 		if (nextSpanNode->_isUse = true)
@@ -230,7 +253,14 @@ void PageCache::freeSpanNodeToPageCache(SpanNode* spanNode)
 		spanNodeObjPool.Delete(nextSpanNode);
 	}
 
+
+	//建立spanNode内第一个page和最后一个page与spanNode*指针的映射,
+	//方便后续进行合并
+	setPageIdMapSpanNode(spanNode->_firstPageId, spanNode);
+	setPageIdMapSpanNode(spanNode->_firstPageId + spanNode->_pageNum - 1, spanNode);
+
 	_spanList[spanNode->_pageNum].pushFront(spanNode);
+
 	//spanNode->_isUse = false;这一句一定要放freeSpanNodeToPageCache()内,
 	//不能放PageCache加锁之前(调试2个半小时的痛),
 	//不然会有线程安全问题(
@@ -241,11 +271,6 @@ void PageCache::freeSpanNodeToPageCache(SpanNode* spanNode)
 	//  然后报错崩溃
 	// )
 	spanNode->_isUse = false;
-
-	//建立spanNode内第一个page和最后一个page与spanNode*指针的映射,
-	//方便后续进行合并
-	_pageIdMapSpanNode[spanNode->_firstPageId] = spanNode;
-	_pageIdMapSpanNode[spanNode->_firstPageId + spanNode->_pageNum - 1] = spanNode;
 }
 
 /// <summary>
@@ -271,3 +296,5 @@ void PageCache::unlock()
 {
 	_pageMutex.unlock();
 }
+
+

@@ -11,15 +11,16 @@ void*& nextMemoryNode(void* node)
 
 	//把碎片内存的前sizeof(void*)字节用来存放下一个结点的地址
 	//*(void**)可以避免32位平台和64位平台指针大小不一样的问题
+	//并且逻辑上也符合:node存储另外一个内存块的地址,那么node本身也是一个二级指针
 	return *((void**)node);
 }
 
 
 
 /// <summary>
-	/// 头插一个碎片内存
-	/// </summary>
-	/// <param name="fragmentedMemory">碎片内存的地址</param>
+/// 头插一个碎片内存
+/// </summary>
+/// <param name="fragmentedMemory">碎片内存的地址</param>
 void FragmentedMemoryList::push(void* fragmentedMemory)
 {
 	assert(nullptr != fragmentedMemory);
@@ -114,8 +115,7 @@ size_t FragmentedMemoryList::popRange(size_t expectedNum, void*& start, void*& e
 /// <returns>为空,返回true;否则,返回false</returns>
 bool FragmentedMemoryList::empty()
 {
-	if (nullptr == _head) return true;
-	return false;
+	return nullptr == _head;
 }
 
 /// <summary>
