@@ -17,8 +17,13 @@ class PageCache
 	/// <summary>
 	/// pageIdµ½SpanNode*µÄÓ³Éä
 	/// </summary>
-	//std::unordered_map<size_t, SpanNode*> _pageIdMapSpanNode;
+#if defined(_WIN64) || defined(__unix__) || defined(__APPLE__) 
 	TCMalloc_PageMap3<64 - PAGE_SHIFT> _pageIdMapSpanNode;
+#elif defined(_WIN32)
+	TCMalloc_PageMap2<32 - PAGE_SHIFT> _pageIdMapSpanNode;
+#elif 
+	#error "unknown platform"
+#endif
 
 
 	/// <summary>
@@ -99,5 +104,7 @@ public:
 };
 
 
-
+#ifdef DEBUG
+	extern int systemAllocCnt;
+#endif 
 

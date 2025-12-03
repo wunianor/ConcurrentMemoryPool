@@ -11,7 +11,7 @@
 #include <cassert>
 #include <errno.h>
 
-#ifdef WIN32
+#if defined(_WIN32)
 	#include <windows.h>
 #elif defined(__unix__) || defined(__APPLE__) 
 	#include <unistd.h>

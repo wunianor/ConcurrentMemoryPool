@@ -59,7 +59,7 @@ public:
 		}
 
 		//使用定位new初始化T类型对象
-		new (obj) T();
+		new (obj) T;
 
 		return obj;
 	}

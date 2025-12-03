@@ -57,16 +57,16 @@ private:
         void* values[LEAF_LENGTH];
     };
 
-    Leaf* root_[ROOT_LENGTH];  // 根节点：指向 32 个叶节点的指针数组
-    void* (*allocator_)(size_t);  // 内存分配函数指针
-    
+    Leaf* root_[ROOT_LENGTH];  // 根节点：指向 32 个叶节点的指针数组    
+
+    FixedSizeMemoryPool<Leaf> _leafObjPool;
 
 public:
     typedef uintptr_t Number;  // 键值类型
 
     // 构造函数：初始化分配器和根节点（初始化为 NULL）
-    explicit TCMalloc_PageMap2(void* (*allocator)(size_t)) {
-        allocator_ = allocator;
+    explicit TCMalloc_PageMap2() {
+        
         memset(root_, 0, sizeof(root_));  // 根节点指针初始化为 NULL
     }
 
@@ -107,7 +107,7 @@ public:
 
             // 若叶节点未分配，则创建并初始化
             if (root_[i1] == NULL) {
-                Leaf* leaf = reinterpret_cast<Leaf*>((*allocator_)(sizeof(Leaf)));
+                Leaf* leaf = _leafObjPool.New();
                 if (leaf == NULL) {  // 内存分配失败
                     return false;
                 }

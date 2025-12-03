@@ -121,7 +121,8 @@ SpanNode* PageCache::fetchPageNumSpan(size_t pageNum)
 	}
 
 #ifdef DEBUG
-	std::cout << "[pageCache]:ptr=" << ptr << "申请次数:" << (++systemAllocCnt) << std::endl;
+	++systemAllocCnt;
+	//std::cout << "[pageCache]:ptr=" << ptr << "申请次数:" << (systemAllocCnt) << std::endl;
 #endif // DEBUG
 
 	

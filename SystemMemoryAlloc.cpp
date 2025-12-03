@@ -12,7 +12,7 @@ void* systemMemoryAlloc(size_t size)
 {
 	void* ptr = nullptr;
 
-#ifdef WIN32
+#ifdef _WIN32
 	ptr = VirtualAlloc(
 		NULL,                          // 系统自动分配地址（天然页对齐）
 		size,		                   // 申请的内存大小
@@ -66,7 +66,7 @@ bool systemMemoryFree(void* ptr, size_t size)
 		return true;
 	}
 
-#ifdef WIN32
+#ifdef _WIN32
 	// Windows 平台：使用 VirtualFree 释放，对应 VirtualAlloc 的分配
 	// 注意：释放时 size 设为 0，MEM_RELEASE 会同时释放保留地址空间和提交的物理内存
 	BOOL releaseResult = VirtualFree(

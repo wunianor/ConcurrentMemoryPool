@@ -64,7 +64,7 @@ void* ThreadCache::allocate(size_t bytes)
 
 void ThreadCache::deallocate(void* ptr,size_t bytes)
 {
-	if (nullptr != ptr) return;
+	if (nullptr == ptr) return;
 
 	size_t index = CalculateTool::calculateIndex(bytes); //计算ptr对应链表的索引
 
