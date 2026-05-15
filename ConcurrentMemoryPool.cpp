@@ -5,21 +5,21 @@
 void* ConcurrentAlloc(size_t size)
 {
 	void* ptr = nullptr;
-	if (size > THREAD_CACHE_MAX_ALLOCATE_BYTES) //ÉêÇëµÄÄÚ´æ´óÐ¡´óÓÚÍ¨¹ýthreadCache×î´ó¿ÉÉêÇëÄÚ´æ
+	if (size > THREAD_CACHE_MAX_ALLOCATE_BYTES) //ç”³è¯·çš„å†…å­˜å¤§å°å¤§äºŽé€šè¿‡threadCacheæœ€å¤§å¯ç”³è¯·å†…å­˜
 	{
-		size_t alignedBytes = CalculateTool::calculateAlignedBytes(size); //¼ÆËã¸ù¾Ýsize¶ÔÆëºóµÄalignedBytes
-		size_t pageNum = alignedBytes >> PAGE_SHIFT;//¼ÆËãÐèÒª¶àÉÙ¸öpage
+		size_t alignedBytes = CalculateTool::calculateAlignedBytes(size); //è®¡ç®—æ ¹æ®sizeå¯¹é½åŽçš„alignedBytes
+		size_t pageNum = alignedBytes >> PAGE_SHIFT;//è®¡ç®—éœ€è¦å¤šå°‘ä¸ªpage
 
 		PageCache::getInstance()->lock();
-		SpanNode* spanNode = PageCache::getInstance()->fetchPageNumSpan(pageNum); //»ñÈ¡Ò»¸öº¬pageNum¸öpageµÄspanNode
+		SpanNode* spanNode = PageCache::getInstance()->fetchPageNumSpan(pageNum); //èŽ·å–ä¸€ä¸ªå«pageNumä¸ªpageçš„spanNode
 		spanNode->_fragmentedMemorySize = size;
 		PageCache::getInstance()->unlock();
 
-		ptr = (void*)((spanNode->_firstPageId) << PAGE_SHIFT); //¼ÆËãÄÚ´æ¿éÆðÊ¼µØÖ·
+		ptr = (void*)((spanNode->_firstPageId) << PAGE_SHIFT); //è®¡ç®—å†…å­˜å—èµ·å§‹åœ°å€
 	}
 	else
 	{
-		//Í¨¹ýThreadCacheÀ´ÉêÇë
+		//é€šè¿‡ThreadCacheæ¥ç”³è¯·
 		if (nullptr == TLSThreadCache)
 		{
 			TLSThreadCache = TLSthreadCacheObjPool.New();
@@ -34,21 +34,22 @@ void* ConcurrentAlloc(size_t size)
 
 void ConcurrentFree(void* ptr)
 {
+	if(nullptr == ptr) return;
 	assert(nullptr != TLSThreadCache);
 
-	size_t pageId = ((size_t)ptr) >> PAGE_SHIFT;//¼ÆËãptrËùÔÚµÄpageµÄid
+	size_t pageId = ((size_t)ptr) >> PAGE_SHIFT;//è®¡ç®—ptræ‰€åœ¨çš„pageçš„id
 
-	//pageIdÓ³ÉäSpanNodeµÄÊý¾Ý½á¹¹ÊÇ²»´æÔÚÍ¬Ê±¶ÔÒ»¸öµØ·½½øÐÐ¶ÁÐ´²Ù×÷µÄ
-	//Ê²Ã´Çé¿öÏÂ»á¶Á:
-	//	1.ÊÍ·ÅÄÚ´æµÄÊ±ºò
-	//Ê²Ã´Çé¿öÏÂ»áÐ´:
-	//	1.ÉêÇëÄÚ´æÊ±,ÔÚ°ÑÄÚ´æ½»¸øÓÃ»§Ö®Ç°(spanNode¶¼Ã»¸øÓÃ»§,ÓÃ»§ÔõÃ´»áÊÍ·ÅÆä°üº¬µÄÄÚ´æ)
-	//	2.ÊÍ·ÅÄÚ´æºÏ²¢SpanNodeÊ±,°ÑSpanNode·ÅÈëpageCache²ãÇ°(¸ÃspanNodeµÄËùÓÐÄÚ´æ¶¼±»ÓÃ»§ÊÍ·ÅÁË,Õý³£Çé¿öÏÂÓÃ»§²»»áÔÙÊÍ·Å¸ÃspanNodeÄÚµÄÄÚ´æÁË)
-	SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId);//ÇópageId¶ÔÓ¦µÄspanNode
+	//pageIdæ˜ å°„SpanNodeçš„æ•°æ®ç»“æž„æ˜¯ä¸å­˜åœ¨åŒæ—¶å¯¹ä¸€ä¸ªåœ°æ–¹è¿›è¡Œè¯»å†™æ“ä½œçš„
+	//ä»€ä¹ˆæƒ…å†µä¸‹ä¼šè¯»:
+	//	1.é‡Šæ”¾å†…å­˜çš„æ—¶å€™
+	//ä»€ä¹ˆæƒ…å†µä¸‹ä¼šå†™:
+	//	1.ç”³è¯·å†…å­˜æ—¶,åœ¨æŠŠå†…å­˜äº¤ç»™ç”¨æˆ·ä¹‹å‰(spanNodeéƒ½æ²¡ç»™ç”¨æˆ·,ç”¨æˆ·æ€Žä¹ˆä¼šé‡Šæ”¾å…¶åŒ…å«çš„å†…å­˜)
+	//	2.é‡Šæ”¾å†…å­˜åˆå¹¶SpanNodeæ—¶,æŠŠSpanNodeæ”¾å…¥pageCacheå±‚å‰(è¯¥spanNodeçš„æ‰€æœ‰å†…å­˜éƒ½è¢«ç”¨æˆ·é‡Šæ”¾äº†,æ­£å¸¸æƒ…å†µä¸‹ç”¨æˆ·ä¸ä¼šå†é‡Šæ”¾è¯¥spanNodeå†…çš„å†…å­˜äº†)
+	SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId);//æ±‚pageIdå¯¹åº”çš„spanNode
 
-	size_t bytes = spanNode->_fragmentedMemorySize;//¼ÆËãptrÄÚ´æ¿éµÄ´óÐ¡
+	size_t bytes = spanNode->_fragmentedMemorySize;//è®¡ç®—ptrå†…å­˜å—çš„å¤§å°
 
-	if (bytes > THREAD_CACHE_MAX_ALLOCATE_BYTES) //Èç¹ûptrÄÚ´æ¿éµÄ´óÐ¡´óÓÚÍ¨¹ýthreadCache×î´ó¿ÉÉêÇëÄÚ´æ
+	if (bytes > THREAD_CACHE_MAX_ALLOCATE_BYTES) //å¦‚æžœptrå†…å­˜å—çš„å¤§å°å¤§äºŽé€šè¿‡threadCacheæœ€å¤§å¯ç”³è¯·å†…å­˜
 	{
 		PageCache::getInstance()->lock();
 		PageCache::getInstance()->freeSpanNodeToPageCache(spanNode);
