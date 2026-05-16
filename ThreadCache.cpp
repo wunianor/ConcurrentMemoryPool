@@ -1,20 +1,19 @@
 #include "ThreadCache.h"
 
 
-
 void* ThreadCache::fetchFromCentralCache(size_t index, size_t alignedBytes)
 {
 	assert(0 <= index && index < FRAMENTED_MEMORY_LIST_NUM);
 	assert(1 <= alignedBytes && alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
 	/*
-		Âı¿ªÊ¼»ñÈ¡ËéÆ¬ÄÚ´æËã·¨
-			µÚÒ»´ÎÉêÇë,»ñÈ¡µ½µÄËéÆ¬ÄÚ´æ½ÏÉÙ;
-			ºóĞø»áËæ×ÅÉêÇë´ÎÊıµÄÔö¶à,»ñÈ¡µ½µÄËéÆ¬ÄÚ´æÒ²Ô½¶à;
-			alignedBytesÔ½´ó,Ô¤ÆÚ»ñÈ¡µ½µÄ¸öÊı¾ÍÔ½ÉÙ;
-			alignedBytesÔ½Ğ¡,Ô¤ÆÚ»ñÈ¡µ½µÄ¸öÊı¾ÍÔ½¶à;
+		æ…¢å¼€å§‹è·å–ç¢ç‰‡å†…å­˜ç®—æ³•
+			ç¬¬ä¸€æ¬¡ç”³è¯·,è·å–åˆ°çš„ç¢ç‰‡å†…å­˜è¾ƒå°‘;
+			åç»­ä¼šéšç€ç”³è¯·æ¬¡æ•°çš„å¢å¤š,è·å–åˆ°çš„ç¢ç‰‡å†…å­˜ä¹Ÿè¶Šå¤š;
+			alignedBytesè¶Šå¤§,é¢„æœŸè·å–åˆ°çš„ä¸ªæ•°å°±è¶Šå°‘;
+			alignedBytesè¶Šå°,é¢„æœŸè·å–åˆ°çš„ä¸ªæ•°å°±è¶Šå¤š;
 	*/
-	//¼ÆËãÔ¤ÆÚ´ÓCentralCache²ãÅúÁ¿»ñÈ¡µÄËéÆ¬ÄÚ´æµÄ¸öÊı
+	//è®¡ç®—é¢„æœŸä»CentralCacheå±‚æ‰¹é‡è·å–çš„ç¢ç‰‡å†…å­˜çš„ä¸ªæ•°
 	size_t expectedFragmentedMemoryNum = min(_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache(), CalculateTool::calculateFetchFragmentedMemoryNum(alignedBytes));
 
 	assert(_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache() > 0);
@@ -22,25 +21,25 @@ void* ThreadCache::fetchFromCentralCache(size_t index, size_t alignedBytes)
 
 	if (expectedFragmentedMemoryNum == _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache())
 	{
-		++_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache();//¸üĞÂÏÂÒ»´Î´ÓCentralCache»ñÈ¡ËéÆ¬ÄÚ´æµÄÊıÁ¿
+		++_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache();//æ›´æ–°ä¸‹ä¸€æ¬¡ä»CentralCacheè·å–ç¢ç‰‡å†…å­˜çš„æ•°é‡
 	}
 
 	
-	//´ÓCentralCache²ãÅúÁ¿»ñÈ¡ËéÆ¬ÄÚ´æ,
-	//µÃµ½µÄÊÇÒ»¸öbegin¿ªÊ¼,end½áÎ²µÄÁ´±í
+	//ä»CentralCacheå±‚æ‰¹é‡è·å–ç¢ç‰‡å†…å­˜,
+	//å¾—åˆ°çš„æ˜¯ä¸€ä¸ªbeginå¼€å§‹,endç»“å°¾çš„é“¾è¡¨
 	void* begin = nullptr;
 	void* end = nullptr;
 	size_t actualFragmentedMemoryNum = CentralCache::getInstance()->fetchRangeFramentedMemory(alignedBytes, expectedFragmentedMemoryNum, begin, end);
 
 	assert(actualFragmentedMemoryNum > 0);
 
-	//Èç¹ûÊµ¼Ê»ñÈ¡µÄÊıÁ¿>1,½«startºóÃæµÄ½áµã¶¼·ÅÈëThreadCache²ãµÄ_fragmentedMemoryList[index]ÄÚ
+	//å¦‚æœå®é™…è·å–çš„æ•°é‡>1,å°†startåé¢çš„ç»“ç‚¹éƒ½æ”¾å…¥ThreadCacheå±‚çš„_fragmentedMemoryList[index]å†…
 	if (actualFragmentedMemoryNum > 1)
 	{
 		_fragmentedMemoryList[index].pushRange(nextMemoryNode(begin), end, actualFragmentedMemoryNum);
 	}
 	
-	//·µ»Ø»ñÈ¡µ½µÄËéÆ¬ÄÚ´æ
+	//è¿”å›è·å–åˆ°çš„ç¢ç‰‡å†…å­˜
 	return begin;
 }
 
@@ -49,14 +48,14 @@ void* ThreadCache::allocate(size_t bytes)
 	if (0 == bytes) return nullptr;
 	assert(1 <= bytes && bytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
-	size_t alignedBytes = CalculateTool::calculateAlignedBytes(bytes); //¼ÆËãbytes¶ÔÆëºóµÄ×Ö½ÚÊı
-	size_t index = CalculateTool::calculateIndex(bytes); //¼ÆËãbytes¶ÔÓ¦Á´±íµÄË÷Òı
+	size_t alignedBytes = CalculateTool::calculateAlignedBytes(bytes); //è®¡ç®—byteså¯¹é½åçš„å­—èŠ‚æ•°
+	size_t index = CalculateTool::calculateIndex(bytes); //è®¡ç®—byteså¯¹åº”é“¾è¡¨çš„ç´¢å¼•
 
-	if (!_fragmentedMemoryList[index].empty()) //ÓÅÏÈ´Ósize¶ÔÓ¦µÄËéÆ¬ÄÚ´æÁ´±íÉêÇë
+	if (!_fragmentedMemoryList[index].empty()) //ä¼˜å…ˆä»sizeå¯¹åº”çš„ç¢ç‰‡å†…å­˜é“¾è¡¨ç”³è¯·
 	{
 		return _fragmentedMemoryList[index].pop();
 	}
-	else //´ÓCentralCache»ñÈ¡ÄÚ´æ
+	else //ä»CentralCacheè·å–å†…å­˜
 	{
 		return fetchFromCentralCache(index, alignedBytes);
 	}
@@ -66,7 +65,7 @@ void ThreadCache::deallocate(void* ptr,size_t bytes)
 {
 	if (nullptr == ptr) return;
 
-	size_t index = CalculateTool::calculateIndex(bytes); //¼ÆËãptr¶ÔÓ¦Á´±íµÄË÷Òı
+	size_t index = CalculateTool::calculateIndex(bytes); //è®¡ç®—ptrå¯¹åº”é“¾è¡¨çš„ç´¢å¼•
 
 	_fragmentedMemoryList[index].push(ptr);
 
@@ -74,9 +73,9 @@ void ThreadCache::deallocate(void* ptr,size_t bytes)
 	{
 		void* begin = nullptr;
 		void* end = nullptr;
-		_fragmentedMemoryList[index].popRange(_fragmentedMemoryList[index].size(), begin, end); //½«¸ÃÁ´±íÄÚËùÓĞµÄËéÆ¬ÄÚ´æ¶¼µ¯³ö
+		_fragmentedMemoryList[index].popRange(_fragmentedMemoryList[index].size(), begin, end); //å°†è¯¥é“¾è¡¨å†…æ‰€æœ‰çš„ç¢ç‰‡å†…å­˜éƒ½å¼¹å‡º
 
-		//½« ÏÂÒ»´Î´ÓCentralCacheÅúÁ¿»ñÈ¡ËéÆ¬ÄÚ´æµÄÊıÁ¿ -1 ,²¢Óë1Çómax()
+		//å°† ä¸‹ä¸€æ¬¡ä»CentralCacheæ‰¹é‡è·å–ç¢ç‰‡å†…å­˜çš„æ•°é‡ -1 ,å¹¶ä¸1æ±‚max()
 		size_t nextNum = _fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache();
 		_fragmentedMemoryList[index].nextFetchFragmentedMemoryNumFromCentralCache() = max(nextNum - 1, (size_t)1);
 
