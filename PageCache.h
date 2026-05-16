@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "Common.h"
 #include "SpanList.h"
 #include "SystemMemoryAlloc.h"
@@ -9,13 +10,13 @@
 class PageCache
 {
 	/// <summary>
-	/// _spanListÊı×é,
-	/// _spanList[i]ÎªÓĞi¸öpageµÄSpan×é³ÉµÄÁ´±í
+	/// _spanListæ•°ç»„,
+	/// _spanList[i]ä¸ºæœ‰iä¸ªpageçš„Spanç»„æˆçš„é“¾è¡¨
 	/// </summary>
 	SpanList _spanList[PAGE_CACHE_SPAN_LIST_NUM + 1];
 
 	/// <summary>
-	/// pageIdµ½SpanNode*µÄÓ³Éä
+	/// pageIdåˆ°SpanNode*çš„æ˜ å°„
 	/// </summary>
 #if defined(_WIN64) || defined(__unix__) || defined(__APPLE__) 
 	TCMalloc_PageMap3<64 - PAGE_SHIFT> _pageIdMapSpanNode;
@@ -27,78 +28,78 @@ class PageCache
 
 
 	/// <summary>
-	/// pageCache²ãµÄ»¥³âËø
+	/// pageCacheå±‚çš„äº’æ–¥é”
 	/// </summary>
 	std::mutex _pageMutex;
 
 	/// <summary>
-	/// pageCache¶ÔÏó³Ø
-	/// Êµ¼ÊÉÏÕâ¸ö¶ÔÏó³ØÄÚÖ»»áÓĞÒ»¸ö¶ÔÏó
+	/// pageCacheå¯¹è±¡æ± 
+	/// å®é™…ä¸Šè¿™ä¸ªå¯¹è±¡æ± å†…åªä¼šæœ‰ä¸€ä¸ªå¯¹è±¡
 	/// </summary>
 	static FixedSizeMemoryPool<PageCache> _pageCacheObjPool;
 
 	/// <summary>
-	/// PageCacheµÄÎ¨Ò»ÊµÀı
+	/// PageCacheçš„å”¯ä¸€å®ä¾‹
 	/// </summary>
 	static PageCache* _instance;
 
 	/// <summary>
-	/// ´´ÔìÎ¨Ò»µ¥ÀıµÄ»¥³âËø
+	/// åˆ›é€ å”¯ä¸€å•ä¾‹çš„äº’æ–¥é”
 	/// </summary>
 	static std::mutex _createInstanceMutex;
 
 public:
 
 	/// <summary>
-	/// »ñÈ¡Î¨Ò»PageCacheÊµÀı
+	/// è·å–å”¯ä¸€PageCacheå®ä¾‹
 	/// </summary>
-	/// <returns>·µ»ØÎ¨Ò»PageCacheÊµÀı</returns>
+	/// <returns>è¿”å›å”¯ä¸€PageCacheå®ä¾‹</returns>
 	static PageCache* getInstance();
 
 	/// <summary>
-	/// ´ÓPageCacheÄÚ»ñÈ¡Ò»¸öÓĞpageNum¸öpageµÄSpan
+	/// ä»PageCacheå†…è·å–ä¸€ä¸ªæœ‰pageNumä¸ªpageçš„Span
 	/// </summary>
-	/// <param name="pageNum">Ò³µÄÊıÁ¿</param>
-	/// <returns>·µ»ØÒ»¸öÓĞpageNum¸öpageµÄSpan</returns>
+	/// <param name="pageNum">é¡µçš„æ•°é‡</param>
+	/// <returns>è¿”å›ä¸€ä¸ªæœ‰pageNumä¸ªpageçš„Span</returns>
 	SpanNode* fetchPageNumSpan(size_t pageNum);
 
 	/// <summary>
-	/// ²éÕÒpageIdËùÔÚµÄspanNode
+	/// æŸ¥æ‰¾pageIdæ‰€åœ¨çš„spanNode
 	/// </summary>
-	/// <param name="pageId">Ò³ºÅ</param>
-	/// <returns>·µ»ØpageIdËùÔÚµÄspanNode</returns>
+	/// <param name="pageId">é¡µå·</param>
+	/// <returns>è¿”å›pageIdæ‰€åœ¨çš„spanNode</returns>
 	SpanNode* getPageIdMapSpanNode(size_t pageId);
 
 
 	/// <summary>
-	/// ÉèÖÃpageIdËùÔÚµÄspanNode
+	/// è®¾ç½®pageIdæ‰€åœ¨çš„spanNode
 	/// </summary>
-	/// <param name="pageId">Ò³ºÅ</param>
-	/// <param name="spanNode">pageIdËùÔÚµÄspanNode</param>
+	/// <param name="pageId">é¡µå·</param>
+	/// <param name="spanNode">pageIdæ‰€åœ¨çš„spanNode</param>
 	/// <returns></returns>
 	void setPageIdMapSpanNode(size_t pageId, SpanNode* spanNode);
 
 	/// <summary>
-	/// ÏòPageCacheÊÍ·ÅspanNode
+	/// å‘PageCacheé‡Šæ”¾spanNode
 	/// </summary>
-	/// <param name="spanNode">ĞèÒªÊÍ·ÅµÄspanNode</param>
+	/// <param name="spanNode">éœ€è¦é‡Šæ”¾çš„spanNode</param>
 	void freeSpanNodeToPageCache(SpanNode* spanNode);
 
 	/// <summary>
-	/// ÉêÇëËø
+	/// ç”³è¯·é”
 	/// 
-	/// ×¢Òâ:
-	/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-	/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+	/// æ³¨æ„:
+	/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´lock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+	/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 	/// </summary>
 	void lock();
 
 	/// <summary>
-	/// ÊÍ·ÅËø
+	/// é‡Šæ”¾é”
 	///
-	/// ×¢Òâ:
-	/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂunlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-	/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+	/// æ³¨æ„:
+	/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´unlock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+	/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 	/// </summary>
 	void unlock();
 };
