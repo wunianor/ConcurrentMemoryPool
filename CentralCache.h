@@ -6,73 +6,74 @@
 #include "FixedSizeMemoryPool.hpp"
 #include "PageCache.h"
 
+//transcode to utf8
 
 class CentralCache
 {
 	/// <summary>
-	/// spanÁ´±íÊı×é
+	/// spané“¾è¡¨æ•°ç»„
 	/// </summary>
 	SpanList _spanList[FRAMENTED_MEMORY_LIST_NUM];
 
 	/// <summary>
-	/// centralCache¶ÔÏó³Ø
-	/// Êµ¼ÊÉÏÕâ¸ö¶ÔÏó³ØÄÚÖ»»áÓĞÒ»¸ö¶ÔÏó
+	/// centralCacheå¯¹è±¡æ± 
+	/// å®é™…ä¸Šè¿™ä¸ªå¯¹è±¡æ± å†…åªä¼šæœ‰ä¸€ä¸ªå¯¹è±¡
 	/// </summary>
 	static FixedSizeMemoryPool<CentralCache> _centralCacheObjPool;
 
 	/// <summary>
-	/// CentralCacheµÄÎ¨Ò»ÊµÀı
+	/// CentralCacheçš„å”¯ä¸€å®ä¾‹
 	/// </summary>
 	static CentralCache* _instance;
 
 	/// <summary>
-	/// ´´ÔìÎ¨Ò»µ¥ÀıµÄ»¥³âËø
+	/// åˆ›é€ å”¯ä¸€å•ä¾‹çš„äº’æ–¥é”
 	/// </summary>
 	static std::mutex _createInstanceMutex;
 
 public:
 	/// <summary>
-	/// Ä¬ÈÏ¹¹Ôì
+	/// é»˜è®¤æ„é€ 
 	/// </summary>
 	CentralCache();
 
 	/// <summary>
-	/// ½ûÓÃ¿½±´¹¹Ôì
+	/// ç¦ç”¨æ‹·è´æ„é€ 
 	/// </summary>
 	/// <param name=""></param>
 	CentralCache(const CentralCache&) = delete;
 
 	/// <summary>
-	/// »ñÈ¡Î¨Ò»µÄCentralCacheÊµÀı,
-	/// ¸Ã·½·¨ÊÇÏß³Ì°²È«µÄ
+	/// è·å–å”¯ä¸€çš„CentralCacheå®ä¾‹,
+	/// è¯¥æ–¹æ³•æ˜¯çº¿ç¨‹å®‰å…¨çš„
 	/// </summary>
-	/// <returns>·µ»ØÎ¨Ò»µÄCentralCacheÊµÀı</returns>
+	/// <returns>è¿”å›å”¯ä¸€çš„CentralCacheå®ä¾‹</returns>
 	static CentralCache* getInstance();
 
 	/// <summary>
-	/// ´ÓspanListÖĞ»ñÈ¡Ò»¸öSpanNode
+	/// ä»spanListä¸­è·å–ä¸€ä¸ªSpanNode
 	/// </summary>
-	/// <param name="spanList">±íÊ¾´ÓÄÄ¸öspanListÖĞ»ñÈ¡SpanNode</param>
-	/// <param name="alignedSize">¶ÔÆëÖ®ºóµÄ×Ö½ÚÊı</param>
-	/// <returns>·µ»ØÒ»¸öSpanNodeµÄµØÖ·</returns>
+	/// <param name="spanList">è¡¨ç¤ºä»å“ªä¸ªspanListä¸­è·å–SpanNode</param>
+	/// <param name="alignedSize">å¯¹é½ä¹‹åçš„å­—èŠ‚æ•°</param>
+	/// <returns>è¿”å›ä¸€ä¸ªSpanNodeçš„åœ°å€</returns>
 	SpanNode* getOneSpanNode(SpanList& spanList, size_t alignedSize);
 
 	/// <summary>
-	/// »ñÈ¡Ò»¶¨ÊıÁ¿µÄËéÆ¬ÄÚ´æ,
-	/// µÃµ½µÄÊÇÒ»¸öbegin¿ªÊ¼,end½áÎ²µÄÁ´±í
+	/// è·å–ä¸€å®šæ•°é‡çš„ç¢ç‰‡å†…å­˜,
+	/// å¾—åˆ°çš„æ˜¯ä¸€ä¸ªbeginå¼€å§‹,endç»“å°¾çš„é“¾è¡¨
 	/// </summary>
-	/// <param name="alignedBytes">¶ÔÓÚµ¥¸öËéÆ¬ÄÚ´æ,¶ÔÆëºóµÄ×Ö½ÚÊı</param>
-	/// <param name="expectedNum">ÆÚÍû»ñÈ¡µÄÊıÁ¿</param>
-	/// <param name="start">Êä³öĞÍ²ÎÊı,ËéÆ¬ÄÚ´æÁ´±íµÄµÚÒ»¸ö½áµã</param>
-	/// <param name="end">Êä³öĞÍ²ÎÊı,ËéÆ¬ÄÚ´æÁ´±íµÄ×îºóÒ»¸ö½áµã</param>
-	/// <returns>·µ»ØÊµ¼Ê»ñÈ¡µ½µÄÊıÁ¿</returns>
+	/// <param name="alignedBytes">å¯¹äºå•ä¸ªç¢ç‰‡å†…å­˜,å¯¹é½åçš„å­—èŠ‚æ•°</param>
+	/// <param name="expectedNum">æœŸæœ›è·å–çš„æ•°é‡</param>
+	/// <param name="start">è¾“å‡ºå‹å‚æ•°,ç¢ç‰‡å†…å­˜é“¾è¡¨çš„ç¬¬ä¸€ä¸ªç»“ç‚¹</param>
+	/// <param name="end">è¾“å‡ºå‹å‚æ•°,ç¢ç‰‡å†…å­˜é“¾è¡¨çš„æœ€åä¸€ä¸ªç»“ç‚¹</param>
+	/// <returns>è¿”å›å®é™…è·å–åˆ°çš„æ•°é‡</returns>
 	size_t fetchRangeFramentedMemory(size_t alignedBytes, size_t expectedNum, void*& start, void*& end);
 
 	/// <summary>
-	/// ½«Á´±íÖĞµÄÃ¿Ò»¸öËéÆ¬ÄÚ´æ»¹¸ø¶ÔÓ¦µÄSpanNode
+	/// å°†é“¾è¡¨ä¸­çš„æ¯ä¸€ä¸ªç¢ç‰‡å†…å­˜è¿˜ç»™å¯¹åº”çš„SpanNode
 	/// </summary>
 	/// <param name="index"></param>
-	/// <param name="begin">Á´±íÍ·½áµã</param>
+	/// <param name="begin">é“¾è¡¨å¤´ç»“ç‚¹</param>
 	void freeListToCentrealCacheSpans(size_t index, void* begin);
 };
 
