@@ -1,5 +1,7 @@
 #pragma once
 
+//transcode to utf8
+
 #include "Common.h"
 #include "SystemMemoryAlloc.h"
 
@@ -7,41 +9,41 @@ template<class T>
 class FixedSizeMemoryPool
 {
 	/// <summary>
-	/// µ±Ç°Á¬ĞøÎ´Ê¹ÓÃÄÚ´æ(¼´´ó¿éÄÚ´æ)µÄÆğÊ¼µØÖ·
+	/// å½“å‰è¿ç»­æœªä½¿ç”¨å†…å­˜(å³å¤§å—å†…å­˜)çš„èµ·å§‹åœ°å€
 	/// </summary>
 	char* _curContiguousMemory = nullptr;
 
 	/// <summary>
-	/// µ±Ç°Õû¿éÁ¬ĞøÎ´Ê¹ÓÃÄÚ´æ(¼´´ó¿éÄÚ´æ)µÄ´óĞ¡,
+	/// å½“å‰æ•´å—è¿ç»­æœªä½¿ç”¨å†…å­˜(å³å¤§å—å†…å­˜)çš„å¤§å°,
 	/// </summary>
 	size_t _curContiguousMemorySize = 0;
 
 	/// <summary>
-	/// ËéÆ¬ÄÚ´æÁ´±í,
-	/// »¹¸ø¶¨³¤ÄÚ´æ³ØµÄËéÆ¬ÄÚ´æ Á´ÔÚÕâ¸öÁ´±íÉÏ
+	/// ç¢ç‰‡å†…å­˜é“¾è¡¨,
+	/// è¿˜ç»™å®šé•¿å†…å­˜æ± çš„ç¢ç‰‡å†…å­˜ é“¾åœ¨è¿™ä¸ªé“¾è¡¨ä¸Š
 	/// </summary>
 	FragmentedMemoryList _fragmentedMemoryList;
 
 public:
 	/// <summary>
-	/// ´Ó¶¨³¤ÄÚ´æ³ØÖĞnewÒ»¸öTÀàĞÍ¶ÔÏó
+	/// ä»å®šé•¿å†…å­˜æ± ä¸­newä¸€ä¸ªTç±»å‹å¯¹è±¡
 	/// </summary>
-	/// <returns>·µ»ØÒ»¸öTÀàĞÍ¶ÔÏóÖ¸Õë</returns>
+	/// <returns>è¿”å›ä¸€ä¸ªTç±»å‹å¯¹è±¡æŒ‡é’ˆ</returns>
 	T* New()
 	{
 		T* obj = nullptr;
 
-		if (!_fragmentedMemoryList.empty()) //ÓÅÏÈÊ¹ÓÃËéÆ¬ÄÚ´æ¿Õ¼äÁ´±íÉÏµÄ¿Õ¼ä
+		if (!_fragmentedMemoryList.empty()) //ä¼˜å…ˆä½¿ç”¨ç¢ç‰‡å†…å­˜ç©ºé—´é“¾è¡¨ä¸Šçš„ç©ºé—´
 		{
 			obj = (T*)(_fragmentedMemoryList.pop());
 		}
 		else 
 		{
-			if (_curContiguousMemorySize < sizeof(T)) //Èç¹ûÁ¬ĞøÄÚ´æ¿Õ¼äµÄÊ£Óà´óĞ¡ Ğ¡ÓÚ TÀàĞÍ´óĞ¡
+			if (_curContiguousMemorySize < sizeof(T)) //å¦‚æœè¿ç»­å†…å­˜ç©ºé—´çš„å‰©ä½™å¤§å° å°äº Tç±»å‹å¤§å°
 			{
 				size_t allocMemorySize = max((1 << PAGE_SHIFT), (sizeof(T) / (1 << PAGE_SHIFT) + 1) * (1 << PAGE_SHIFT));
 				_curContiguousMemory = (char*)systemMemoryAlloc(allocMemorySize);
-				if (nullptr == _curContiguousMemory) //Èç¹ûÉêÇëÄÚ´æÊ§°Ü
+				if (nullptr == _curContiguousMemory) //å¦‚æœç”³è¯·å†…å­˜å¤±è´¥
 				{
 					throw std::bad_alloc();
 				}
@@ -50,27 +52,27 @@ public:
 			}
 
 			obj = (T*)(_curContiguousMemory);
-			//Èç¹ûsizeof(T)<sizeof(void*),
-			//Ôò·ÖÅäsizeof(void*)µÄ´óĞ¡,
-			//È·±£_fragmentedMemoryListÖĞµÄ½áµãµÄµØÖ·ÄÜ¹»´æµÄÏÂ
+			//å¦‚æœsizeof(T)<sizeof(void*),
+			//åˆ™åˆ†é…sizeof(void*)çš„å¤§å°,
+			//ç¡®ä¿_fragmentedMemoryListä¸­çš„ç»“ç‚¹çš„åœ°å€èƒ½å¤Ÿå­˜çš„ä¸‹
 			size_t objMemorySize = max(sizeof(T), sizeof(void*)); 
-			_curContiguousMemory += objMemorySize;   //¸üĞÂÁ¬ĞøÄÚ´æ¿Õ¼äµÄÆğÊ¼µØÖ·
-			_curContiguousMemorySize -= objMemorySize; //¸üĞÂÊ£ÓàÁ¬ĞøÄÚ´æ¿Õ¼äµÄ´óĞ¡
+			_curContiguousMemory += objMemorySize;   //æ›´æ–°è¿ç»­å†…å­˜ç©ºé—´çš„èµ·å§‹åœ°å€
+			_curContiguousMemorySize -= objMemorySize; //æ›´æ–°å‰©ä½™è¿ç»­å†…å­˜ç©ºé—´çš„å¤§å°
 		}
 
-		//Ê¹ÓÃ¶¨Î»new³õÊ¼»¯TÀàĞÍ¶ÔÏó
+		//ä½¿ç”¨å®šä½newåˆå§‹åŒ–Tç±»å‹å¯¹è±¡
 		new (obj) T;
 
 		return obj;
 	}
 
 	/// <summary>
-	/// ÊÍ·ÅÒ»¸öTÀàĞÍ¶ÔÏó
+	/// é‡Šæ”¾ä¸€ä¸ªTç±»å‹å¯¹è±¡
 	/// </summary>
-	/// <param name="obj">TÀàĞÍ¶ÔÏóµÄÖ¸Õë</param>
+	/// <param name="obj">Tç±»å‹å¯¹è±¡çš„æŒ‡é’ˆ</param>
 	void Delete(T* obj)
 	{
-		//µ÷ÓÃTÀàĞÍ¶ÔÏóÎö¹¹º¯Êı
+		//è°ƒç”¨Tç±»å‹å¯¹è±¡ææ„å‡½æ•°
 		obj->~T();
 
 		_fragmentedMemoryList.push(obj);
