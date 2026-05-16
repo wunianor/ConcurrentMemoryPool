@@ -1,14 +1,14 @@
 #include "CentralCache.h"
-
+//transcode to utf8
 //std::atomic<size_t> sum1 = 0, sum2 = 0, sum3 = 0;
 
-//³õÊ¼»¯CentralCache¶ÔÏó³Ø
+//åˆå§‹åŒ–CentralCacheå¯¹è±¡æ± 
 FixedSizeMemoryPool<CentralCache> CentralCache::_centralCacheObjPool;
 
-//nullptr³õÊ¼»¯Î¨Ò»CentralCacheÊµÀı
+//nullptråˆå§‹åŒ–å”¯ä¸€CentralCacheå®ä¾‹
 CentralCache* CentralCache::_instance = nullptr;
 
-//³õÊ¼»¯´´½¨Î¨Ò»CentralCacheÊµÀıµÄ»¥³âËø
+//åˆå§‹åŒ–åˆ›å»ºå”¯ä¸€CentralCacheå®ä¾‹çš„äº’æ–¥é”
 std::mutex CentralCache::_createInstanceMutex;
 
 CentralCache::CentralCache() {}
@@ -39,11 +39,11 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 	
 
 	
-	//ÏÈÈ¥spanListÀïÃæÈ¥Ñ°ÕÒÓĞÎ´·ÖÅäÄÚ´æµÄSpan
+	//å…ˆå»spanListé‡Œé¢å»å¯»æ‰¾æœ‰æœªåˆ†é…å†…å­˜çš„Span
 	SpanNode* it = spanList.begin();
 	while (it != spanList.end())
 	{
-		if (!it->_fragmentedMemoryList.empty()) //Èç¹ûitÖ¸ÏòµÄSpanNodeµÄ_fragmentedMemoryListÓĞËéÆ¬ÄÚ´æ½áµã
+		if (!it->_fragmentedMemoryList.empty()) //å¦‚æœitæŒ‡å‘çš„SpanNodeçš„_fragmentedMemoryListæœ‰ç¢ç‰‡å†…å­˜ç»“ç‚¹
 		{
 			return it;
 		}
@@ -55,19 +55,19 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 
 	
 
-	//×ßµ½ÕâÀï,ËµÃ÷spanListÄÚËùÓĞµÄSpanµÄËéÆ¬ÄÚ´æ¶¼·ÖÅäÍê±Ï or Ã»ÓĞSpan,
-	//´ÓpageCache»ñÈ¡Ò»¸öspan
-	spanList.unlock(); //ÊÍ·ÅspanListµÄËø,ÈÃÆäËûÊÍ·ÅËéÆ¬ÄÚ´æµÄÏß³Ì¿ÉÒÔ½øÀ´
+	//èµ°åˆ°è¿™é‡Œ,è¯´æ˜spanListå†…æ‰€æœ‰çš„Spançš„ç¢ç‰‡å†…å­˜éƒ½åˆ†é…å®Œæ¯• or æ²¡æœ‰Span,
+	//ä»pageCacheè·å–ä¸€ä¸ªspan
+	spanList.unlock(); //é‡Šæ”¾spanListçš„é”,è®©å…¶ä»–é‡Šæ”¾ç¢ç‰‡å†…å­˜çš„çº¿ç¨‹å¯ä»¥è¿›æ¥
 	PageCache::getInstance()->lock();
 	SpanNode* span = PageCache::getInstance()->fetchPageNumSpan(CalculateTool::calculateFetchPageNum(alignedBytes));
 	PageCache::getInstance()->unlock();
 	
-	//½«spanÄÚµÄ¶à¸öpageÇĞ³ÉĞ¡¿éµÄËéÆ¬¿Õ¼ä,²¢Á´½Ó³ÉÁ´±í
-	char* begin = (char*)((span->_firstPageId) << PAGE_SHIFT);//¶à¸öpageµÄÆğÊ¼µØÖ·
-	char* end = begin + span->_pageNum * (1 << PAGE_SHIFT); //¶à¸öpageµÄÄ©Î²µØÖ·,[begin,end)
-	char* tail = begin; //µ±Ç°Á´±íµÄ×îºóÒ»¸ö½áµã(µÄÆğÊ¼µØÖ·),[begin,tail],tail->next=nullptr
-	char* tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1; //tail½áµãµÄÏÂÒ»¸ö½áµãµÄ×îºóÒ»¸öµØÖ·
-	size_t count = (end - begin) / alignedBytes;//ËéÆ¬ÄÚ´æµÄÊıÁ¿
+	//å°†spanå†…çš„å¤šä¸ªpageåˆ‡æˆå°å—çš„ç¢ç‰‡ç©ºé—´,å¹¶é“¾æ¥æˆé“¾è¡¨
+	char* begin = (char*)((span->_firstPageId) << PAGE_SHIFT);//å¤šä¸ªpageçš„èµ·å§‹åœ°å€
+	char* end = begin + span->_pageNum * (1 << PAGE_SHIFT); //å¤šä¸ªpageçš„æœ«å°¾åœ°å€,[begin,end)
+	char* tail = begin; //å½“å‰é“¾è¡¨çš„æœ€åä¸€ä¸ªç»“ç‚¹(çš„èµ·å§‹åœ°å€),[begin,tail],tail->next=nullptr
+	char* tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1; //tailç»“ç‚¹çš„ä¸‹ä¸€ä¸ªç»“ç‚¹çš„æœ€åä¸€ä¸ªåœ°å€
+	size_t count = (end - begin) / alignedBytes;//ç¢ç‰‡å†…å­˜çš„æ•°é‡
 
 
 	//begin2 = clock();
@@ -75,7 +75,7 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 	while (tailNextNodeTailAddress < end)
 	{
 		nextMemoryNode(tail) = tail + alignedBytes;
-		tail = (char*)nextMemoryNode(tail); //¸üĞÂtail½áµã
+		tail = (char*)nextMemoryNode(tail); //æ›´æ–°tailç»“ç‚¹
 		tailNextNodeTailAddress = (tail + alignedBytes) + alignedBytes - 1;
 
 	}
@@ -87,7 +87,7 @@ SpanNode* CentralCache::getOneSpanNode(SpanList& spanList, size_t alignedBytes)
 	//	int x = 0;
 	//}
 
-	nextMemoryNode(tail) = nullptr; //×îºóÒ»¸ö½áµãµÄnextÉèÎªnullptr
+	nextMemoryNode(tail) = nullptr; //æœ€åä¸€ä¸ªç»“ç‚¹çš„nextè®¾ä¸ºnullptr
 
 	
 
@@ -131,20 +131,20 @@ void CentralCache::freeListToCentrealCacheSpans(size_t index, void* begin)
 {
 	_spanList[index].lock();
 	
-	void* cur = begin; //±£´æµ±Ç°ÕıÔÚÊÍ·ÅµÄÄÚ´æËéÆ¬
+	void* cur = begin; //ä¿å­˜å½“å‰æ­£åœ¨é‡Šæ”¾çš„å†…å­˜ç¢ç‰‡
 	while (cur)
 	{
 		void* next = nextMemoryNode(cur);
 
-		size_t pageId = (size_t)cur >> PAGE_SHIFT; //¼ÆËãcurËùÔÚpageµÄÒ³ºÅ
+		size_t pageId = (size_t)cur >> PAGE_SHIFT; //è®¡ç®—curæ‰€åœ¨pageçš„é¡µå·
 
 
-		SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId); //¼ÆËãpageÔÚÄÄ¸öspanNodeÄÚ
+		SpanNode* spanNode = PageCache::getInstance()->getPageIdMapSpanNode(pageId); //è®¡ç®—pageåœ¨å“ªä¸ªspanNodeå†…
 		
 		assert(nullptr != spanNode);
 		
 
-		spanNode->_fragmentedMemoryList.push(cur);//ÊÍ·Åcurµ½¶ÔÓ¦µÄspanNode
+		spanNode->_fragmentedMemoryList.push(cur);//é‡Šæ”¾curåˆ°å¯¹åº”çš„spanNode
 		--(spanNode->_useCount);
 
 		if (spanNode->_useCount == 0)
