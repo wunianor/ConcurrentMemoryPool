@@ -5,48 +5,47 @@
 #include "PageCache.h"
 
 
-
 class ThreadCache
 {
 	/// <summary>
-	/// ËéÆ¬ÄÚ´æÁ´±íÊı×é
+	/// ç¢ç‰‡å†…å­˜é“¾è¡¨æ•°ç»„
 	/// </summary>
 	FragmentedMemoryList _fragmentedMemoryList[FRAMENTED_MEMORY_LIST_NUM];
 
 public:
 	
 	/// <summary>
-	/// ·ÖÅäÖ¸¶¨´óĞ¡µÄÄÚ´æ²¢·µ»ØÖ¸Ïò¸ÃÄÚ´æµÄÖ¸Õë¡£
+	/// åˆ†é…æŒ‡å®šå¤§å°çš„å†…å­˜å¹¶è¿”å›æŒ‡å‘è¯¥å†…å­˜çš„æŒ‡é’ˆã€‚
 	/// </summary>
-	/// <param name="bytes">Òª·ÖÅäµÄÄÚ´æ´óĞ¡</param>
-	/// <returns>Ö¸ÏòÒÑ·ÖÅäÄÚ´æµÄÖ¸Õë</returns>
+	/// <param name="bytes">è¦åˆ†é…çš„å†…å­˜å¤§å°</param>
+	/// <returns>æŒ‡å‘å·²åˆ†é…å†…å­˜çš„æŒ‡é’ˆ</returns>
 	void* allocate(size_t bytes);
 
 	/// <summary>
-	/// ÊÍ·ÅÖ®Ç°·ÖÅäµÄÄÚ´æ¿é
+	/// é‡Šæ”¾ä¹‹å‰åˆ†é…çš„å†…å­˜å—
 	/// </summary>
-	/// <param name="ptr">Ö¸ÏòÒªÊÍ·ÅµÄÄÚ´æ¿éµÄÆğÊ¼µØÖ·</param>
-	/// <param name="bytes>ÒªÊÍ·ÅµÄÄÚ´æ¿éµÄ´óĞ¡</param>
+	/// <param name="ptr">æŒ‡å‘è¦é‡Šæ”¾çš„å†…å­˜å—çš„èµ·å§‹åœ°å€</param>
+	/// <param name="bytes>è¦é‡Šæ”¾çš„å†…å­˜å—çš„å¤§å°</param>
 	void deallocate(void* ptr, size_t bytes);
 
 
 	/// <summary>
-	/// ´ÓCentralCacheÄÚ»ñÈ¡ËéÆ¬ÄÚ´æ
+	/// ä»CentralCacheå†…è·å–ç¢ç‰‡å†…å­˜
 	/// </summary>
-	/// <param name="index">Á´±íÔÚÊı×éÄÚµÄË÷Òı</param>
-	/// <param name="alignedbytes">¶ÔÆëºóµÄ×Ö½ÚÊı</param>
+	/// <param name="index">é“¾è¡¨åœ¨æ•°ç»„å†…çš„ç´¢å¼•</param>
+	/// <param name="alignedbytes">å¯¹é½åçš„å­—èŠ‚æ•°</param>
 	/// <returns></returns>
 	void* fetchFromCentralCache(size_t index, size_t alignedbytes);
 };
 
 /// <summary>
-/// Ã¿¸öÏß³Ì¶ÀÕ¼µÄThreadCache(Ïß³Ì¾Ö²¿´æ´¢)
+/// æ¯ä¸ªçº¿ç¨‹ç‹¬å çš„ThreadCache(çº¿ç¨‹å±€éƒ¨å­˜å‚¨)
 /// </summary>
-static _declspec(thread) ThreadCache* TLSThreadCache = nullptr;//static±£Ö¤ÆäÖ»ÔÚµ±Ç°ÎÄ¼ş¿É¼û
+static _declspec(thread) ThreadCache* TLSThreadCache = nullptr;//staticä¿è¯å…¶åªåœ¨å½“å‰æ–‡ä»¶å¯è§
 
 /// <summary>
-/// Ã¿¸öÏß³Ì¶ÀÕ¼µÄthreadCache¶ÔÏó³Ø(Ïß³Ì¾Ö²¿´æ´¢),
-/// Êµ¼ÊÉÏÕâ¸ö¶ÔÏó³ØÄÚÖ»»áÓĞÒ»¸ö¶ÔÏó
+/// æ¯ä¸ªçº¿ç¨‹ç‹¬å çš„threadCacheå¯¹è±¡æ± (çº¿ç¨‹å±€éƒ¨å­˜å‚¨),
+/// å®é™…ä¸Šè¿™ä¸ªå¯¹è±¡æ± å†…åªä¼šæœ‰ä¸€ä¸ªå¯¹è±¡
 /// </summary>
 static _declspec(thread) FixedSizeMemoryPool<ThreadCache> TLSthreadCacheObjPool;
 
