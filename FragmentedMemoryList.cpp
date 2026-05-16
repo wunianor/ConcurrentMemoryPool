@@ -1,26 +1,27 @@
 #include "FragmentedMemoryList.h"
 
+
 /// <summary>
-/// ·µ»ØËéÆ¬ÄÚ´æ½Úµã´æ´¢µÄÏÂÒ»¸öÄÚ´æ½ÚµãµØÖ·µÄÒıÓÃ
+/// è¿”å›ç¢ç‰‡å†…å­˜èŠ‚ç‚¹å­˜å‚¨çš„ä¸‹ä¸€ä¸ªå†…å­˜èŠ‚ç‚¹åœ°å€çš„å¼•ç”¨
 /// </summary>
-/// <param name="node">Ò»¿éËéÆ¬ÄÚ´æµÄµØÖ·</param>
-/// <returns>·µ»ØËéÆ¬ÄÚ´æ½Úµã´æ´¢µÄÏÂÒ»¸öÄÚ´æ½ÚµãµØÖ·µÄÒıÓÃ</returns>
+/// <param name="node">ä¸€å—ç¢ç‰‡å†…å­˜çš„åœ°å€</param>
+/// <returns>è¿”å›ç¢ç‰‡å†…å­˜èŠ‚ç‚¹å­˜å‚¨çš„ä¸‹ä¸€ä¸ªå†…å­˜èŠ‚ç‚¹åœ°å€çš„å¼•ç”¨</returns>
 void*& nextMemoryNode(void* node)
 {
 	assert(nullptr != node);
 
-	//°ÑËéÆ¬ÄÚ´æµÄÇ°sizeof(void*)×Ö½ÚÓÃÀ´´æ·ÅÏÂÒ»¸ö½áµãµÄµØÖ·
-	//*(void**)¿ÉÒÔ±ÜÃâ32Î»Æ½Ì¨ºÍ64Î»Æ½Ì¨Ö¸Õë´óĞ¡²»Ò»ÑùµÄÎÊÌâ
-	//²¢ÇÒÂß¼­ÉÏÒ²·ûºÏ:node´æ´¢ÁíÍâÒ»¸öÄÚ´æ¿éµÄµØÖ·,ÄÇÃ´node±¾ÉíÒ²ÊÇÒ»¸ö¶ş¼¶Ö¸Õë
+	//æŠŠç¢ç‰‡å†…å­˜çš„å‰sizeof(void*)å­—èŠ‚ç”¨æ¥å­˜æ”¾ä¸‹ä¸€ä¸ªç»“ç‚¹çš„åœ°å€
+	//*(void**)å¯ä»¥é¿å…32ä½å¹³å°å’Œ64ä½å¹³å°æŒ‡é’ˆå¤§å°ä¸ä¸€æ ·çš„é—®é¢˜
+	//å¹¶ä¸”é€»è¾‘ä¸Šä¹Ÿç¬¦åˆ:nodeå­˜å‚¨å¦å¤–ä¸€ä¸ªå†…å­˜å—çš„åœ°å€,é‚£ä¹ˆnodeæœ¬èº«ä¹Ÿæ˜¯ä¸€ä¸ªäºŒçº§æŒ‡é’ˆ
 	return *((void**)node);
 }
 
 
 
 /// <summary>
-/// Í·²åÒ»¸öËéÆ¬ÄÚ´æ
+/// å¤´æ’ä¸€ä¸ªç¢ç‰‡å†…å­˜
 /// </summary>
-/// <param name="fragmentedMemory">ËéÆ¬ÄÚ´æµÄµØÖ·</param>
+/// <param name="fragmentedMemory">ç¢ç‰‡å†…å­˜çš„åœ°å€</param>
 void FragmentedMemoryList::push(void* fragmentedMemory)
 {
 	assert(nullptr != fragmentedMemory);
@@ -32,12 +33,12 @@ void FragmentedMemoryList::push(void* fragmentedMemory)
 }
 
 /// <summary>
-/// Í·²åÒ»¶ÎÄÚ´æËéÆ¬,
-/// Õâ¶ÎÄÚ´æËéÆ¬µÄ½á¹¹ÊÇÁ´±í
+/// å¤´æ’ä¸€æ®µå†…å­˜ç¢ç‰‡,
+/// è¿™æ®µå†…å­˜ç¢ç‰‡çš„ç»“æ„æ˜¯é“¾è¡¨
 /// </summary>
-/// <param name="begin">Á´±íµÄµÚÒ»¸ö½áµã</param>
-/// <param name="end">Á´±íµÄ×îºóÒ»¸ö½áµã</param>
-/// <param name="size">Á´±íµÄ´óĞ¡</param>
+/// <param name="begin">é“¾è¡¨çš„ç¬¬ä¸€ä¸ªç»“ç‚¹</param>
+/// <param name="end">é“¾è¡¨çš„æœ€åä¸€ä¸ªç»“ç‚¹</param>
+/// <param name="size">é“¾è¡¨çš„å¤§å°</param>
 void FragmentedMemoryList::pushRange(void* begin, void* end, size_t size)
 {
 	assert(nullptr != begin);
@@ -50,11 +51,11 @@ void FragmentedMemoryList::pushRange(void* begin, void* end, size_t size)
 }
 
 /// <summary>
-/// ´ÓÁ´±íÖĞ»ñÈ¡(Í·É¾)Ò»¸öËéÆ¬ÄÚ´æ
+/// ä»é“¾è¡¨ä¸­è·å–(å¤´åˆ )ä¸€ä¸ªç¢ç‰‡å†…å­˜
 /// </summary>
 /// <returns>
-///  ÈôÍ·½áµãÎªnullptr,·µ»Ønullptr;
-///  ·ñÔò·µ»ØÒ»¿éËéÆ¬ÄÚ´æµÄµØÖ·
+///  è‹¥å¤´ç»“ç‚¹ä¸ºnullptr,è¿”å›nullptr;
+///  å¦åˆ™è¿”å›ä¸€å—ç¢ç‰‡å†…å­˜çš„åœ°å€
 /// </returns>
 void* FragmentedMemoryList::pop()
 {
@@ -72,13 +73,13 @@ void* FragmentedMemoryList::pop()
 }
 
 /// <summary>
-/// ´ÓÁ´±íÖĞÍ·É¾(»ñÈ¡)Ò»¶¨ÊıÁ¿µÄËéÆ¬ÄÚ´æ,
-/// ²¢ÇÒend->next»áÖÃÎªnullptr
+/// ä»é“¾è¡¨ä¸­å¤´åˆ (è·å–)ä¸€å®šæ•°é‡çš„ç¢ç‰‡å†…å­˜,
+/// å¹¶ä¸”end->nextä¼šç½®ä¸ºnullptr
 /// </summary>
-/// <param name="expectedNum">ÆÚÍûÍ·É¾(»ñÈ¡)µÄÊıÁ¿</param>
-/// <param name="start">Êä³öĞÍ²ÎÊı,»ñÈ¡µ½µÄÁ´±íµÄµÚÒ»¸ö½áµã</param>
-/// <param name="end">Êä³öĞÍ²ÎÊı,»ñÈ¡µ½µÄÁ´±íµÄ×îºóÒ»¸ö½áµã</param>
-/// <returns>·µ»ØÊµ¼Ê»ñÈ¡µ½µÄÊıÁ¿</returns>
+/// <param name="expectedNum">æœŸæœ›å¤´åˆ (è·å–)çš„æ•°é‡</param>
+/// <param name="start">è¾“å‡ºå‹å‚æ•°,è·å–åˆ°çš„é“¾è¡¨çš„ç¬¬ä¸€ä¸ªç»“ç‚¹</param>
+/// <param name="end">è¾“å‡ºå‹å‚æ•°,è·å–åˆ°çš„é“¾è¡¨çš„æœ€åä¸€ä¸ªç»“ç‚¹</param>
+/// <returns>è¿”å›å®é™…è·å–åˆ°çš„æ•°é‡</returns>
 size_t FragmentedMemoryList::popRange(size_t expectedNum, void*& start, void*& end)
 {
 	assert(expectedNum > 0);
@@ -91,7 +92,7 @@ size_t FragmentedMemoryList::popRange(size_t expectedNum, void*& start, void*& e
 		return 0;
 	}
 
-	size_t actualNum = 1; //Êµ¼Ê»ñÈ¡µ½µÄ¸öÊı
+	size_t actualNum = 1; //å®é™…è·å–åˆ°çš„ä¸ªæ•°
 
 	while (actualNum < expectedNum && nullptr != nextMemoryNode(end))
 	{
@@ -99,27 +100,27 @@ size_t FragmentedMemoryList::popRange(size_t expectedNum, void*& start, void*& e
 		++actualNum;
 	}
 
-	_head = nextMemoryNode(end);//¸üĞÂÁ´±íÍ·½áµã
+	_head = nextMemoryNode(end);//æ›´æ–°é“¾è¡¨å¤´ç»“ç‚¹
 
-	nextMemoryNode(end) = nullptr;//½«end->nextÖÃÎªnullptr
+	nextMemoryNode(end) = nullptr;//å°†end->nextç½®ä¸ºnullptr
 
-	_size -= actualNum; //¸üĞÂÁ´±íÄÚËéÆ¬ÄÚ´æµÄÊıÁ¿
+	_size -= actualNum; //æ›´æ–°é“¾è¡¨å†…ç¢ç‰‡å†…å­˜çš„æ•°é‡
 
 	return actualNum;
 
 }
 
 /// <summary>
-/// »ñÈ¡Á´±íÊÇ·ñÎª¿Õ
+/// è·å–é“¾è¡¨æ˜¯å¦ä¸ºç©º
 /// </summary>
-/// <returns>Îª¿Õ,·µ»Øtrue;·ñÔò,·µ»Øfalse</returns>
+/// <returns>ä¸ºç©º,è¿”å›true;å¦åˆ™,è¿”å›false</returns>
 bool FragmentedMemoryList::empty()
 {
 	return nullptr == _head;
 }
 
 /// <summary>
-/// ½«¶ÔÏóÖØÖÃÎª¿Õ×´Ì¬:½«Í·Ö¸ÕëÖÃÎª nullptr,´óĞ¡ÖÃÎª 0,²¢½«ÏÂ´Î´ÓCentralCache»ñÈ¡ËéÆ¬»¯ÄÚ´æµÄ¼ÆÊıÆ÷ÖØÖÃÎª 1
+/// å°†å¯¹è±¡é‡ç½®ä¸ºç©ºçŠ¶æ€:å°†å¤´æŒ‡é’ˆç½®ä¸º nullptr,å¤§å°ç½®ä¸º 0,å¹¶å°†ä¸‹æ¬¡ä»CentralCacheè·å–ç¢ç‰‡åŒ–å†…å­˜çš„è®¡æ•°å™¨é‡ç½®ä¸º 1
 /// </summary>
 void FragmentedMemoryList::setEmpty()
 {
@@ -129,18 +130,18 @@ void FragmentedMemoryList::setEmpty()
 }
 
 /// <summary>
-/// »ñÈ¡Á´±íÄÚËéÆ¬ÄÚ´æµÄÊıÁ¿
+/// è·å–é“¾è¡¨å†…ç¢ç‰‡å†…å­˜çš„æ•°é‡
 /// </summary>
-/// <returns>·µ»ØÁ´±íÄÚËéÆ¬ÄÚ´æµÄÊıÁ¿</returns>
+/// <returns>è¿”å›é“¾è¡¨å†…ç¢ç‰‡å†…å­˜çš„æ•°é‡</returns>
 size_t FragmentedMemoryList::size()
 {
 	return _size;
 }
 
 /// <summary>
-/// »ñÈ¡ÏÂÒ»´Î´ÓCentralCacheÅúÁ¿»ñÈ¡ËéÆ¬ÄÚ´æµÄÊıÁ¿µÄÒıÓÃ
+/// è·å–ä¸‹ä¸€æ¬¡ä»CentralCacheæ‰¹é‡è·å–ç¢ç‰‡å†…å­˜çš„æ•°é‡çš„å¼•ç”¨
 /// </summary>
-/// <returns>·µ»ØÏÂÒ»´Î´ÓCentralCacheÅúÁ¿»ñÈ¡ËéÆ¬ÄÚ´æµÄÊıÁ¿µÄÒıÓÃ</returns>
+/// <returns>è¿”å›ä¸‹ä¸€æ¬¡ä»CentralCacheæ‰¹é‡è·å–ç¢ç‰‡å†…å­˜çš„æ•°é‡çš„å¼•ç”¨</returns>
 size_t& FragmentedMemoryList::nextFetchFragmentedMemoryNumFromCentralCache()
 {
 	return _nextFetchFragmentedMemoryNumFromCentralCache;
