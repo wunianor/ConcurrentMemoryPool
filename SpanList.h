@@ -4,72 +4,73 @@
 #include "FixedSizeMemoryPool.hpp"
 
 
+
 /// <summary>
-/// Span½ÚµãÀà
+/// SpanèŠ‚ç‚¹ç±»
 /// </summary>
 struct SpanNode
 {
 	/// <summary>
-	/// ¸ÃSpanÄÚµÚÒ»¸öpageµÄÒ³ºÅ,
-	/// ¼´¸ÃSpanÄÚµÚÒ»¸öpageµÄÆğÊ¼µØÖ·>>13
+	/// è¯¥Spanå†…ç¬¬ä¸€ä¸ªpageçš„é¡µå·,
+	/// å³è¯¥Spanå†…ç¬¬ä¸€ä¸ªpageçš„èµ·å§‹åœ°å€>>13
 	/// </summary>
 	size_t _firstPageId = 0;
 
 	/// <summary>
-	/// ¸ÃSpanÄÚÓĞ¶àÉÙ¸öpage
+	/// è¯¥Spanå†…æœ‰å¤šå°‘ä¸ªpage
 	/// </summary>
 	size_t _pageNum = 0;
 
 
 
 	/// <summary>
-	/// ÉÏÒ»¸öSpanNode
+	/// ä¸Šä¸€ä¸ªSpanNode
 	/// </summary>
 	SpanNode* _prev = nullptr;
 
 	/// <summary>
-	/// ÏÂÒ»¸öSpanNode
+	/// ä¸‹ä¸€ä¸ªSpanNode
 	/// </summary>
 	SpanNode* _next = nullptr;
 
 
 
 	/// <summary>
-	/// ÓĞ¶àÉÙ¿éËéÆ¬ÄÚ´æÒÑ¾­·ÖÅä¸øThreadCache
+	/// æœ‰å¤šå°‘å—ç¢ç‰‡å†…å­˜å·²ç»åˆ†é…ç»™ThreadCache
 	/// </summary>
 	size_t _useCount = 0;
 
 	/// <summary>
-	/// ±íÊ¾¸ÃspanNodeÊÇ·ñ±»CentralCacheÊ¹ÓÃ
+	/// è¡¨ç¤ºè¯¥spanNodeæ˜¯å¦è¢«CentralCacheä½¿ç”¨
 	/// </summary>
 	bool _isUse = false;
 
 
 
 	/// <summary>
-	/// Ã¿Ò»¸öËéÆ¬ÄÚ´æµÄ´óĞ¡
+	/// æ¯ä¸€ä¸ªç¢ç‰‡å†…å­˜çš„å¤§å°
 	/// </summary>
 	size_t _fragmentedMemorySize = 0;
 
 	/// <summary>
-	/// ËéÆ¬ÄÚ´æÁ´±í
+	/// ç¢ç‰‡å†…å­˜é“¾è¡¨
 	/// </summary>
 	FragmentedMemoryList _fragmentedMemoryList;
 
 };
 
 /// <summary>
-/// SpanÁ´±íÀà
+/// Spané“¾è¡¨ç±»
 /// </summary>
 class SpanList
 {
 	/// <summary>
-	/// Á´±íÉÚ±øÎ»Í·½áµã
+	/// é“¾è¡¨å“¨å…µä½å¤´ç»“ç‚¹
 	/// </summary>
 	SpanNode* _head;
 
 	/// <summary>
-	/// »¥³âËø
+	/// äº’æ–¥é”
 	/// </summary>
 	std::mutex _mutex;
 
@@ -79,78 +80,78 @@ public:
 
 
 	/// <summary>
-	/// ÉêÇëËø
+	/// ç”³è¯·é”
 	/// 
-	/// ×¢Òâ:
-	/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-	/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+	/// æ³¨æ„:
+	/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´lock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+	/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 	/// </summary>
 	void lock();
 
 	/// <summary>
-	/// ÊÍ·ÅËø
+	/// é‡Šæ”¾é”
 	///
-	/// ×¢Òâ:
-	/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂunlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-	/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+	/// æ³¨æ„:
+	/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´unlock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+	/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 	/// </summary>
 	void unlock();
 
 
 
 	/// <summary>
-	/// ÔÚposºóÃæ²åÈëÒ»¸ö½Úµã
+	/// åœ¨posåé¢æ’å…¥ä¸€ä¸ªèŠ‚ç‚¹
 	/// </summary>
-	/// <param name="pos">²åÈëÎ»ÖÃ</param>
-	/// <param name="newNode">²åÈë½Úµã</param>
+	/// <param name="pos">æ’å…¥ä½ç½®</param>
+	/// <param name="newNode">æ’å…¥èŠ‚ç‚¹</param>
 	void insert(SpanNode* pos, SpanNode* newNode);
 
 	/// <summary>
-	/// Í·²åÒ»¸öSpanNode
+	/// å¤´æ’ä¸€ä¸ªSpanNode
 	/// </summary>
-	/// <param name="newNode">´ı²åÈë½áµã</param>
+	/// <param name="newNode">å¾…æ’å…¥ç»“ç‚¹</param>
 	void pushFront(SpanNode* newNode);
 
 
 
 	/// <summary>
-	/// É¾³ıposÎ»ÖÃµÄspanNode
+	/// åˆ é™¤posä½ç½®çš„spanNode
 	/// </summary>
-	/// <param name="pos">ĞèÒªÉ¾³ıµÄÎ»ÖÃ</param>
+	/// <param name="pos">éœ€è¦åˆ é™¤çš„ä½ç½®</param>
 	void erase(SpanNode* pos);
 
 	/// <summary>
-	/// Í·É¾(»ñÈ¡)Ò»¸öSpanNode
+	/// å¤´åˆ (è·å–)ä¸€ä¸ªSpanNode
 	/// </summary>
-	/// <returns>·µ»ØÒ»¸öSpanNode</returns>
+	/// <returns>è¿”å›ä¸€ä¸ªSpanNode</returns>
 	SpanNode* popFront();
 
 
 
 
 	/// <summary>
-	/// »ñÈ¡¶ÔÏóÊÇ·ñÎª¿Õ
+	/// è·å–å¯¹è±¡æ˜¯å¦ä¸ºç©º
 	/// </summary>
 	/// <returns>
-	/// true,±íÊ¾Îª¿Õ;
-	/// false,±íÊ¾²»Îª¿Õ
+	/// true,è¡¨ç¤ºä¸ºç©º;
+	/// false,è¡¨ç¤ºä¸ä¸ºç©º
 	/// </returns>
 	bool empty();
 
 	/// <summary>
-	/// ·µ»Øbegin()µü´úÆ÷
+	/// è¿”å›begin()è¿­ä»£å™¨
 	/// </summary>
-	/// <returns>·µ»Øbegin()µü´úÆ÷</returns>
+	/// <returns>è¿”å›begin()è¿­ä»£å™¨</returns>
 	SpanNode* begin();
 
 	/// <summary>
-	/// ·µ»Øend()µü´úÆ÷
+	/// è¿”å›end()è¿­ä»£å™¨
 	/// </summary>
-	/// <returns>·µ»Øend()µü´úÆ÷</returns>
+	/// <returns>è¿”å›end()è¿­ä»£å™¨</returns>
 	SpanNode* end();
 };
 
 /// <summary>
-/// spanNode¶ÔÏó³Ø
+/// spanNodeå¯¹è±¡æ± 
 /// </summary>
 extern FixedSizeMemoryPool<SpanNode> spanNodeObjPool;
