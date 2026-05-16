@@ -1,159 +1,160 @@
 #pragma once
-#include <cstdint>   // ÓÃÓÚ uintptr_t
-#include <cstring>   // ÓÃÓÚ memset
-#include <cassert>   // ÓÃÓÚ¶ÏÑÔ
+#include <cstdint>   // ç”¨äº uintptr_t
+#include <cstring>   // ç”¨äº memset
+#include <cassert>   // ç”¨äºæ–­è¨€
+
 
 #include "FixedSizeMemoryPool.hpp"
 
-// ¶¨Òå¶ÏÑÔºê£¨¼æÈİÔ­ÓĞ ASSERT ÓÃ·¨£©
+// å®šä¹‰æ–­è¨€å®ï¼ˆå…¼å®¹åŸæœ‰ ASSERT ç”¨æ³•ï¼‰
 #define ASSERT(expr) assert(expr)
 
-// µ¥¼¶Êı×éÓ³Éä£¨ÊÊÓÃÓÚ BITS ½ÏĞ¡³¡¾°£¬Ö±½Ó·ÖÅäÁ¬ĞøÊı×é£©
+// å•çº§æ•°ç»„æ˜ å°„ï¼ˆé€‚ç”¨äº BITS è¾ƒå°åœºæ™¯ï¼Œç›´æ¥åˆ†é…è¿ç»­æ•°ç»„ï¼‰
 template <int BITS>
 class TCMalloc_PageMap1 {
 private:
-    static const int LENGTH = 1 << BITS;  // Êı×é³¤¶È£º2^BITS
-    void** array_;                        // ´æ´¢Ó³Éä¹ØÏµµÄÊı×é£¨void* ÀàĞÍÖµ£©
+    static const int LENGTH = 1 << BITS;  // æ•°ç»„é•¿åº¦ï¼š2^BITS
+    void** array_;                        // å­˜å‚¨æ˜ å°„å…³ç³»çš„æ•°ç»„ï¼ˆvoid* ç±»å‹å€¼ï¼‰
 
 public:
-    typedef uintptr_t Number;  // ¼üÖµÀàĞÍ£¨Ò³ºÅµÈÎŞ·ûºÅÕûÊı£©
+    typedef uintptr_t Number;  // é”®å€¼ç±»å‹ï¼ˆé¡µå·ç­‰æ— ç¬¦å·æ•´æ•°ï¼‰
 
-    // ¹¹Ôìº¯Êı£ºÍ¨¹ıÖ¸¶¨·ÖÅäÆ÷·ÖÅäÊı×éÄÚ´æ²¢³õÊ¼»¯
-    // ²ÎÊı£ºallocator - ÄÚ´æ·ÖÅäº¯Êı£¨ÊäÈë´óĞ¡£¬·µ»Ø·ÖÅäµÄÄÚ´æÖ¸Õë£©
+    // æ„é€ å‡½æ•°ï¼šé€šè¿‡æŒ‡å®šåˆ†é…å™¨åˆ†é…æ•°ç»„å†…å­˜å¹¶åˆå§‹åŒ–
+    // å‚æ•°ï¼šallocator - å†…å­˜åˆ†é…å‡½æ•°ï¼ˆè¾“å…¥å¤§å°ï¼Œè¿”å›åˆ†é…çš„å†…å­˜æŒ‡é’ˆï¼‰
     explicit TCMalloc_PageMap1(void* (*allocator)(size_t)) {
-        // ·ÖÅä 2^BITS ¸ö void* ´óĞ¡µÄÄÚ´æ£¨×Ü´óĞ¡£ºsizeof(void*) * 2^BITS£©
+        // åˆ†é… 2^BITS ä¸ª void* å¤§å°çš„å†…å­˜ï¼ˆæ€»å¤§å°ï¼šsizeof(void*) * 2^BITSï¼‰
         array_ = reinterpret_cast<void**>((*allocator)(sizeof(void*) * LENGTH));
-        memset(array_, 0, sizeof(void*) * LENGTH);  // ³õÊ¼»¯Îª NULL
+        memset(array_, 0, sizeof(void*) * LENGTH);  // åˆå§‹åŒ–ä¸º NULL
     }
 
-    // »ñÈ¡¼ü k ¶ÔÓ¦µÄ value
-    // ·µ»ØÖµ£º´æÔÚ·µ»Ø¶ÔÓ¦Ö¸Õë£¬k ³¬³ö·¶Î§»òÎ´ÉèÖÃ·µ»Ø NULL
+    // è·å–é”® k å¯¹åº”çš„ value
+    // è¿”å›å€¼ï¼šå­˜åœ¨è¿”å›å¯¹åº”æŒ‡é’ˆï¼Œk è¶…å‡ºèŒƒå›´æˆ–æœªè®¾ç½®è¿”å› NULL
     void* get(Number k) const {
-        if ((k >> BITS) > 0) {  // k ³¬¹ı 2^BITS - 1£¨³¬³öÓ³Éä·¶Î§£©
+        if ((k >> BITS) > 0) {  // k è¶…è¿‡ 2^BITS - 1ï¼ˆè¶…å‡ºæ˜ å°„èŒƒå›´ï¼‰
             return NULL;
         }
         return array_[k];
     }
 
-    // ÉèÖÃ¼ü k ¶ÔÓ¦µÄ value
-    // Ç°ÖÃÌõ¼ş£ºk ±ØĞëÔÚ [0, 2^BITS - 1] ·¶Î§ÄÚ£¬ÇÒÒÑÍ¨¹ı Ensure È·±£½Úµã´æÔÚ
+    // è®¾ç½®é”® k å¯¹åº”çš„ value
+    // å‰ç½®æ¡ä»¶ï¼šk å¿…é¡»åœ¨ [0, 2^BITS - 1] èŒƒå›´å†…ï¼Œä¸”å·²é€šè¿‡ Ensure ç¡®ä¿èŠ‚ç‚¹å­˜åœ¨
     void set(Number k, void* v) {
-        ASSERT(k < LENGTH);  // È·±£ k ²»Ô½½ç£¨²¹³äÔ­ÓĞÇ°ÖÃÌõ¼şµÄ¶ÏÑÔ£©
+        ASSERT(k < LENGTH);  // ç¡®ä¿ k ä¸è¶Šç•Œï¼ˆè¡¥å……åŸæœ‰å‰ç½®æ¡ä»¶çš„æ–­è¨€ï¼‰
         array_[k] = v;
     }
 };
 
-// ¶ş¼¶»ùÊıÊ÷Ó³Éä£¨ÊÊÓÃÓÚÖĞµÈ BITS ³¡¾°£¬·Ö¸ù½Úµã+Ò¶½ÚµãÁ½¼¶£¬½ÚÊ¡ÄÚ´æ£©
+// äºŒçº§åŸºæ•°æ ‘æ˜ å°„ï¼ˆé€‚ç”¨äºä¸­ç­‰ BITS åœºæ™¯ï¼Œåˆ†æ ¹èŠ‚ç‚¹+å¶èŠ‚ç‚¹ä¸¤çº§ï¼ŒèŠ‚çœå†…å­˜ï¼‰
 template <int BITS>
 class TCMalloc_PageMap2 {
 private:
-    static const int ROOT_BITS = 5;          // ¸ù½ÚµãÎ»Êı£¨32 ¸ö¸ù½Úµã£©
-    static const int ROOT_LENGTH = 1 << ROOT_BITS;  // ¸ù½ÚµãÊı×é³¤¶È£¨32£©
-    static const int LEAF_BITS = BITS - ROOT_BITS;  // Ò¶½ÚµãÎ»Êı
-    static const int LEAF_LENGTH = 1 << LEAF_BITS;  // Ã¿¸öÒ¶½Úµã´æ´¢µÄ value ÊıÁ¿
+    static const int ROOT_BITS = 5;          // æ ¹èŠ‚ç‚¹ä½æ•°ï¼ˆ32 ä¸ªæ ¹èŠ‚ç‚¹ï¼‰
+    static const int ROOT_LENGTH = 1 << ROOT_BITS;  // æ ¹èŠ‚ç‚¹æ•°ç»„é•¿åº¦ï¼ˆ32ï¼‰
+    static const int LEAF_BITS = BITS - ROOT_BITS;  // å¶èŠ‚ç‚¹ä½æ•°
+    static const int LEAF_LENGTH = 1 << LEAF_BITS;  // æ¯ä¸ªå¶èŠ‚ç‚¹å­˜å‚¨çš„ value æ•°é‡
 
-    // Ò¶½Úµã½á¹¹£º´æ´¢Êµ¼ÊµÄ value Êı×é
+    // å¶èŠ‚ç‚¹ç»“æ„ï¼šå­˜å‚¨å®é™…çš„ value æ•°ç»„
     struct Leaf {
         void* values[LEAF_LENGTH];
     };
 
-    Leaf* root_[ROOT_LENGTH];  // ¸ù½Úµã£ºÖ¸Ïò 32 ¸öÒ¶½ÚµãµÄÖ¸ÕëÊı×é    
+    Leaf* root_[ROOT_LENGTH];  // æ ¹èŠ‚ç‚¹ï¼šæŒ‡å‘ 32 ä¸ªå¶èŠ‚ç‚¹çš„æŒ‡é’ˆæ•°ç»„    
 
     FixedSizeMemoryPool<Leaf> _leafObjPool;
 
 public:
-    typedef uintptr_t Number;  // ¼üÖµÀàĞÍ
+    typedef uintptr_t Number;  // é”®å€¼ç±»å‹
 
-    // ¹¹Ôìº¯Êı£º³õÊ¼»¯·ÖÅäÆ÷ºÍ¸ù½Úµã£¨³õÊ¼»¯Îª NULL£©
+    // æ„é€ å‡½æ•°ï¼šåˆå§‹åŒ–åˆ†é…å™¨å’Œæ ¹èŠ‚ç‚¹ï¼ˆåˆå§‹åŒ–ä¸º NULLï¼‰
     explicit TCMalloc_PageMap2() {
         
-        memset(root_, 0, sizeof(root_));  // ¸ù½ÚµãÖ¸Õë³õÊ¼»¯Îª NULL
+        memset(root_, 0, sizeof(root_));  // æ ¹èŠ‚ç‚¹æŒ‡é’ˆåˆå§‹åŒ–ä¸º NULL
     }
 
-    // »ñÈ¡¼ü k ¶ÔÓ¦µÄ value
-    // ·µ»ØÖµ£º´æÔÚ·µ»Ø¶ÔÓ¦Ö¸Õë£¬k ³¬³ö·¶Î§»ò½ÚµãÎ´·ÖÅä·µ»Ø NULL
+    // è·å–é”® k å¯¹åº”çš„ value
+    // è¿”å›å€¼ï¼šå­˜åœ¨è¿”å›å¯¹åº”æŒ‡é’ˆï¼Œk è¶…å‡ºèŒƒå›´æˆ–èŠ‚ç‚¹æœªåˆ†é…è¿”å› NULL
     void* get(Number k) const {
-        const Number i1 = k >> LEAF_BITS;  // ¸ù½ÚµãË÷Òı£¨¸ß LEAF_BITS Î»£©
-        const Number i2 = k & (LEAF_LENGTH - 1);  // Ò¶½ÚµãË÷Òı£¨µÍ LEAF_BITS Î»£©
+        const Number i1 = k >> LEAF_BITS;  // æ ¹èŠ‚ç‚¹ç´¢å¼•ï¼ˆé«˜ LEAF_BITS ä½ï¼‰
+        const Number i2 = k & (LEAF_LENGTH - 1);  // å¶èŠ‚ç‚¹ç´¢å¼•ï¼ˆä½ LEAF_BITS ä½ï¼‰
 
-        // k ³¬³ö·¶Î§ »ò ¸ù½Úµã¶ÔÓ¦µÄÒ¶½ÚµãÎ´·ÖÅä
+        // k è¶…å‡ºèŒƒå›´ æˆ– æ ¹èŠ‚ç‚¹å¯¹åº”çš„å¶èŠ‚ç‚¹æœªåˆ†é…
         if ((k >> BITS) > 0 || root_[i1] == NULL) {
             return NULL;
         }
         return root_[i1]->values[i2];
     }
 
-    // ÉèÖÃ¼ü k ¶ÔÓ¦µÄ value
-    // Ç°ÖÃÌõ¼ş£ºk ±ØĞëÔÚ [0, 2^BITS - 1] ·¶Î§ÄÚ£¬ÇÒÒÑÍ¨¹ı Ensure È·±£Ò¶½Úµã´æÔÚ
+    // è®¾ç½®é”® k å¯¹åº”çš„ value
+    // å‰ç½®æ¡ä»¶ï¼šk å¿…é¡»åœ¨ [0, 2^BITS - 1] èŒƒå›´å†…ï¼Œä¸”å·²é€šè¿‡ Ensure ç¡®ä¿å¶èŠ‚ç‚¹å­˜åœ¨
     void set(Number k, void* v) {
         const Number i1 = k >> LEAF_BITS;
         const Number i2 = k & (LEAF_LENGTH - 1);
 
-        ASSERT(i1 < ROOT_LENGTH);          // È·±£¸ù½ÚµãË÷Òı²»Ô½½ç
-        ASSERT(root_[i1] != NULL);         // È·±£Ò¶½ÚµãÒÑ·ÖÅä£¨²¹³ä¶ÏÑÔ£©
+        ASSERT(i1 < ROOT_LENGTH);          // ç¡®ä¿æ ¹èŠ‚ç‚¹ç´¢å¼•ä¸è¶Šç•Œ
+        ASSERT(root_[i1] != NULL);         // ç¡®ä¿å¶èŠ‚ç‚¹å·²åˆ†é…ï¼ˆè¡¥å……æ–­è¨€ï¼‰
         root_[i1]->values[i2] = v;
     }
 
-    // È·±£ [start, start + n - 1] ·¶Î§ÄÚµÄ¼ü¶ÔÓ¦µÄÒ¶½ÚµãÒÑ·ÖÅä
-    // ·µ»ØÖµ£º·ÖÅä³É¹¦·µ»Ø true£¬Ê§°Ü£¨ÄÚ´æ²»×ã/³¬³ö·¶Î§£©·µ»Ø false
+    // ç¡®ä¿ [start, start + n - 1] èŒƒå›´å†…çš„é”®å¯¹åº”çš„å¶èŠ‚ç‚¹å·²åˆ†é…
+    // è¿”å›å€¼ï¼šåˆ†é…æˆåŠŸè¿”å› trueï¼Œå¤±è´¥ï¼ˆå†…å­˜ä¸è¶³/è¶…å‡ºèŒƒå›´ï¼‰è¿”å› false
     bool Ensure(Number start, size_t n) {
         for (Number key = start; key <= start + n - 1;) {
-            const Number i1 = key >> LEAF_BITS;  // µ±Ç°¼ü¶ÔÓ¦µÄ¸ù½ÚµãË÷Òı
+            const Number i1 = key >> LEAF_BITS;  // å½“å‰é”®å¯¹åº”çš„æ ¹èŠ‚ç‚¹ç´¢å¼•
 
-            // ¸ù½ÚµãË÷Òı³¬³ö·¶Î§£¨¼ü³¬³ö×ÜÓ³Éä·¶Î§£©
+            // æ ¹èŠ‚ç‚¹ç´¢å¼•è¶…å‡ºèŒƒå›´ï¼ˆé”®è¶…å‡ºæ€»æ˜ å°„èŒƒå›´ï¼‰
             if (i1 >= ROOT_LENGTH) {
                 return false;
             }
 
-            // ÈôÒ¶½ÚµãÎ´·ÖÅä£¬Ôò´´½¨²¢³õÊ¼»¯
+            // è‹¥å¶èŠ‚ç‚¹æœªåˆ†é…ï¼Œåˆ™åˆ›å»ºå¹¶åˆå§‹åŒ–
             if (root_[i1] == NULL) {
                 Leaf* leaf = _leafObjPool.New();
-                if (leaf == NULL) {  // ÄÚ´æ·ÖÅäÊ§°Ü
+                if (leaf == NULL) {  // å†…å­˜åˆ†é…å¤±è´¥
                     return false;
                 }
-                memset(leaf, 0, sizeof(*leaf));  // Ò¶½Úµã value ³õÊ¼»¯Îª NULL
+                memset(leaf, 0, sizeof(*leaf));  // å¶èŠ‚ç‚¹ value åˆå§‹åŒ–ä¸º NULL
                 root_[i1] = leaf;
             }
 
-            // Ìø¹ıµ±Ç°Ò¶½Úµã¸²¸ÇµÄËùÓĞ¼ü£¨ÍÆ½øµ½ÏÂÒ»¸öÒ¶½ÚµãµÄÆğÊ¼¼ü£©
+            // è·³è¿‡å½“å‰å¶èŠ‚ç‚¹è¦†ç›–çš„æ‰€æœ‰é”®ï¼ˆæ¨è¿›åˆ°ä¸‹ä¸€ä¸ªå¶èŠ‚ç‚¹çš„èµ·å§‹é”®ï¼‰
             key = ((key >> LEAF_BITS) + 1) << LEAF_BITS;
         }
         return true;
     }
 
-    // Ô¤·ÖÅäËùÓĞ¿ÉÄÜµÄÓ³Éä½Úµã£¨¸²¸Ç [0, 2^BITS - 1] ËùÓĞ¼ü£©
+    // é¢„åˆ†é…æ‰€æœ‰å¯èƒ½çš„æ˜ å°„èŠ‚ç‚¹ï¼ˆè¦†ç›– [0, 2^BITS - 1] æ‰€æœ‰é”®ï¼‰
     void PreallocateMoreMemory() {
         Ensure(0, 1 << BITS);
     }
 };
 
-// Èı¼¶»ùÊıÊ÷Ó³Éä£¨ÊÊÓÃÓÚ´ó BITS ³¡¾°£¬·Ö¸ù½Úµã+ÖĞ¼ä½Úµã+Ò¶½ÚµãÈı¼¶£¬½øÒ»²½½ÚÊ¡ÄÚ´æ£©
+// ä¸‰çº§åŸºæ•°æ ‘æ˜ å°„ï¼ˆé€‚ç”¨äºå¤§ BITS åœºæ™¯ï¼Œåˆ†æ ¹èŠ‚ç‚¹+ä¸­é—´èŠ‚ç‚¹+å¶èŠ‚ç‚¹ä¸‰çº§ï¼Œè¿›ä¸€æ­¥èŠ‚çœå†…å­˜ï¼‰
 template <int BITS>
 class TCMalloc_PageMap3 {
 private:
-    static const int INTERIOR_BITS = (BITS + 2) / 3;  // ÖĞ¼ä½ÚµãÎ»Êı£¨ÏòÉÏÈ¡Õû£¬·Ö3¼¶£©
-    static const int INTERIOR_LENGTH = 1 << INTERIOR_BITS;  // ÖĞ¼ä½ÚµãÊı×é³¤¶È
-    static const int LEAF_BITS = BITS - 2 * INTERIOR_BITS;  // Ò¶½ÚµãÎ»Êı£¨Ê£Óà bits£©
-    static const int LEAF_LENGTH = 1 << LEAF_BITS;  // Ã¿¸öÒ¶½Úµã´æ´¢µÄ value ÊıÁ¿
+    static const int INTERIOR_BITS = (BITS + 2) / 3;  // ä¸­é—´èŠ‚ç‚¹ä½æ•°ï¼ˆå‘ä¸Šå–æ•´ï¼Œåˆ†3çº§ï¼‰
+    static const int INTERIOR_LENGTH = 1 << INTERIOR_BITS;  // ä¸­é—´èŠ‚ç‚¹æ•°ç»„é•¿åº¦
+    static const int LEAF_BITS = BITS - 2 * INTERIOR_BITS;  // å¶èŠ‚ç‚¹ä½æ•°ï¼ˆå‰©ä½™ bitsï¼‰
+    static const int LEAF_LENGTH = 1 << LEAF_BITS;  // æ¯ä¸ªå¶èŠ‚ç‚¹å­˜å‚¨çš„ value æ•°é‡
 
-    // ÖĞ¼ä½Úµã½á¹¹£ºÖ¸Ïò×Ó½Úµã£¨ÖĞ¼ä½Úµã»òÒ¶½Úµã£©µÄÖ¸ÕëÊı×é
+    // ä¸­é—´èŠ‚ç‚¹ç»“æ„ï¼šæŒ‡å‘å­èŠ‚ç‚¹ï¼ˆä¸­é—´èŠ‚ç‚¹æˆ–å¶èŠ‚ç‚¹ï¼‰çš„æŒ‡é’ˆæ•°ç»„
     struct Node {
         Node* ptrs[INTERIOR_LENGTH];
     };
 
-    // Ò¶½Úµã½á¹¹£º´æ´¢Êµ¼ÊµÄ value Êı×é
+    // å¶èŠ‚ç‚¹ç»“æ„ï¼šå­˜å‚¨å®é™…çš„ value æ•°ç»„
     struct Leaf {
         void* values[LEAF_LENGTH];
     };
 
-    Node* root_;  // ¸ù½Úµã£¨Èı¼¶Ê÷µÄÈë¿Ú£©
-    //void* (*allocator_)(size_t);  // ÄÚ´æ·ÖÅäº¯ÊıÖ¸Õë
+    Node* root_;  // æ ¹èŠ‚ç‚¹ï¼ˆä¸‰çº§æ ‘çš„å…¥å£ï¼‰
+    //void* (*allocator_)(size_t);  // å†…å­˜åˆ†é…å‡½æ•°æŒ‡é’ˆ
 
     FixedSizeMemoryPool<Node> _NodeObjPool;
 
     FixedSizeMemoryPool<Leaf> _LeafObjPool;
 
-    // ´´½¨²¢³õÊ¼»¯Ò»¸öÖĞ¼ä½Úµã£¨ËùÓĞÖ¸Õë³õÊ¼»¯Îª NULL£©
+    // åˆ›å»ºå¹¶åˆå§‹åŒ–ä¸€ä¸ªä¸­é—´èŠ‚ç‚¹ï¼ˆæ‰€æœ‰æŒ‡é’ˆåˆå§‹åŒ–ä¸º NULLï¼‰
     Node* NewNode() {
         Node* result = _NodeObjPool.New();
         if (result != NULL) {
@@ -163,84 +164,84 @@ private:
     }
 
 public:
-    typedef uintptr_t Number;  // ¼üÖµÀàĞÍ
+    typedef uintptr_t Number;  // é”®å€¼ç±»å‹
 
-    // ¹¹Ôìº¯Êı£º³õÊ¼»¯·ÖÅäÆ÷ºÍ¸ù½Úµã
+    // æ„é€ å‡½æ•°ï¼šåˆå§‹åŒ–åˆ†é…å™¨å’Œæ ¹èŠ‚ç‚¹
     explicit TCMalloc_PageMap3() {
-        root_ = NewNode();  // ¸ù½Úµã³õÊ¼»¯ÎªĞÂ´´½¨µÄÖĞ¼ä½Úµã
+        root_ = NewNode();  // æ ¹èŠ‚ç‚¹åˆå§‹åŒ–ä¸ºæ–°åˆ›å»ºçš„ä¸­é—´èŠ‚ç‚¹
     }
 
-    // »ñÈ¡¼ü k ¶ÔÓ¦µÄ value
-    // ·µ»ØÖµ£º´æÔÚ·µ»Ø¶ÔÓ¦Ö¸Õë£¬k ³¬³ö·¶Î§»ò½ÚµãÎ´·ÖÅä·µ»Ø NULL
+    // è·å–é”® k å¯¹åº”çš„ value
+    // è¿”å›å€¼ï¼šå­˜åœ¨è¿”å›å¯¹åº”æŒ‡é’ˆï¼Œk è¶…å‡ºèŒƒå›´æˆ–èŠ‚ç‚¹æœªåˆ†é…è¿”å› NULL
     void* get(Number k) const {
-        // ²ğ·Ö¼üÎªÈı¼¶Ë÷Òı£ºi1£¨¸ù->ÖĞ¼ä£©¡¢i2£¨ÖĞ¼ä->Ò¶£©¡¢i3£¨Ò¶->value£©
+        // æ‹†åˆ†é”®ä¸ºä¸‰çº§ç´¢å¼•ï¼ši1ï¼ˆæ ¹->ä¸­é—´ï¼‰ã€i2ï¼ˆä¸­é—´->å¶ï¼‰ã€i3ï¼ˆå¶->valueï¼‰
         const Number i1 = k >> (LEAF_BITS + INTERIOR_BITS);
         const Number i2 = (k >> LEAF_BITS) & (INTERIOR_LENGTH - 1);
         const Number i3 = k & (LEAF_LENGTH - 1);
 
-        // ¼ì²éÌõ¼ş£ºk ³¬³ö·¶Î§ »ò ÖĞ¼ä½ÚµãÎ´·ÖÅä »ò Ò¶½ÚµãÎ´·ÖÅä
+        // æ£€æŸ¥æ¡ä»¶ï¼šk è¶…å‡ºèŒƒå›´ æˆ– ä¸­é—´èŠ‚ç‚¹æœªåˆ†é… æˆ– å¶èŠ‚ç‚¹æœªåˆ†é…
         if ((k >> BITS) > 0 ||
             root_->ptrs[i1] == NULL ||
             root_->ptrs[i1]->ptrs[i2] == NULL) {
             return NULL;
         }
 
-        // ´ÓÒ¶½ÚµãÖĞ»ñÈ¡ value£¨½«ÖĞ¼ä½ÚµãµÄÖ¸ÕëÇ¿ÖÆ×ª»»ÎªÒ¶½Úµã£©
+        // ä»å¶èŠ‚ç‚¹ä¸­è·å– valueï¼ˆå°†ä¸­é—´èŠ‚ç‚¹çš„æŒ‡é’ˆå¼ºåˆ¶è½¬æ¢ä¸ºå¶èŠ‚ç‚¹ï¼‰
         return reinterpret_cast<Leaf*>(root_->ptrs[i1]->ptrs[i2])->values[i3];
     }
 
-    // ÉèÖÃ¼ü k ¶ÔÓ¦µÄ value
-    // Ç°ÖÃÌõ¼ş£ºk ±ØĞëÔÚ [0, 2^BITS - 1] ·¶Î§ÄÚ£¬ÇÒÒÑÍ¨¹ı Ensure È·±£½Úµã´æÔÚ
+    // è®¾ç½®é”® k å¯¹åº”çš„ value
+    // å‰ç½®æ¡ä»¶ï¼šk å¿…é¡»åœ¨ [0, 2^BITS - 1] èŒƒå›´å†…ï¼Œä¸”å·²é€šè¿‡ Ensure ç¡®ä¿èŠ‚ç‚¹å­˜åœ¨
     void set(Number k, void* v) {
-        ASSERT((k >> BITS) == 0);  // È·±£ k ²»³¬³ö×Ü·¶Î§
+        ASSERT((k >> BITS) == 0);  // ç¡®ä¿ k ä¸è¶…å‡ºæ€»èŒƒå›´
 
-        // ²ğ·ÖÈı¼¶Ë÷Òı
+        // æ‹†åˆ†ä¸‰çº§ç´¢å¼•
         const Number i1 = k >> (LEAF_BITS + INTERIOR_BITS);
         const Number i2 = (k >> LEAF_BITS) & (INTERIOR_LENGTH - 1);
         const Number i3 = k & (LEAF_LENGTH - 1);
 
-        // ¶ÏÑÔ½ÚµãÒÑ·ÖÅä£¨·ûºÏÇ°ÖÃÌõ¼ş£©
+        // æ–­è¨€èŠ‚ç‚¹å·²åˆ†é…ï¼ˆç¬¦åˆå‰ç½®æ¡ä»¶ï¼‰
         ASSERT(root_->ptrs[i1] != NULL);
         ASSERT(root_->ptrs[i1]->ptrs[i2] != NULL);
 
-        // ÉèÖÃÒ¶½ÚµãÖĞµÄ value
+        // è®¾ç½®å¶èŠ‚ç‚¹ä¸­çš„ value
         reinterpret_cast<Leaf*>(root_->ptrs[i1]->ptrs[i2])->values[i3] = v;
     }
 
-    // È·±£ [start, start + n - 1] ·¶Î§ÄÚµÄ¼ü¶ÔÓ¦µÄ½Úµã£¨ÖĞ¼ä+Ò¶£©ÒÑ·ÖÅä
-    // ·µ»ØÖµ£º·ÖÅä³É¹¦·µ»Ø true£¬Ê§°Ü£¨ÄÚ´æ²»×ã/³¬³ö·¶Î§£©·µ»Ø false
+    // ç¡®ä¿ [start, start + n - 1] èŒƒå›´å†…çš„é”®å¯¹åº”çš„èŠ‚ç‚¹ï¼ˆä¸­é—´+å¶ï¼‰å·²åˆ†é…
+    // è¿”å›å€¼ï¼šåˆ†é…æˆåŠŸè¿”å› trueï¼Œå¤±è´¥ï¼ˆå†…å­˜ä¸è¶³/è¶…å‡ºèŒƒå›´ï¼‰è¿”å› false
     bool Ensure(Number start, size_t n) {
         for (Number key = start; key <= start + n - 1;) {
-            // ²ğ·Öµ±Ç°¼üµÄÈı¼¶Ë÷Òı£¨½öÓÃµ½Ç°Á½¼¶£ºi1->ÖĞ¼ä½Úµã£¬i2->Ò¶½Úµã£©
+            // æ‹†åˆ†å½“å‰é”®çš„ä¸‰çº§ç´¢å¼•ï¼ˆä»…ç”¨åˆ°å‰ä¸¤çº§ï¼ši1->ä¸­é—´èŠ‚ç‚¹ï¼Œi2->å¶èŠ‚ç‚¹ï¼‰
             const Number i1 = key >> (LEAF_BITS + INTERIOR_BITS);
-            const Number i2 = (key >> LEAF_BITS) & (INTERIOR_LENGTH - 1);  // ĞŞÕı£ºÔ­´úÂëÂ©Ğ´ key£¬Ó¦Îª key
+            const Number i2 = (key >> LEAF_BITS) & (INTERIOR_LENGTH - 1);  // ä¿®æ­£ï¼šåŸä»£ç æ¼å†™ keyï¼Œåº”ä¸º key
 
-            // ¼ì²éË÷ÒıÊÇ·ñ³¬³ö·¶Î§£¨³¬³ö×ÜÓ³Éä·¶Î§£©
+            // æ£€æŸ¥ç´¢å¼•æ˜¯å¦è¶…å‡ºèŒƒå›´ï¼ˆè¶…å‡ºæ€»æ˜ å°„èŒƒå›´ï¼‰
             if (i1 >= INTERIOR_LENGTH || i2 >= INTERIOR_LENGTH) {
                 return false;
             }
 
-            // È·±£ÖĞ¼ä½ÚµãÒÑ·ÖÅä
+            // ç¡®ä¿ä¸­é—´èŠ‚ç‚¹å·²åˆ†é…
             if (root_->ptrs[i1] == NULL) {
                 Node* mid_node = NewNode();
-                if (mid_node == NULL) {  // ÄÚ´æ·ÖÅäÊ§°Ü
+                if (mid_node == NULL) {  // å†…å­˜åˆ†é…å¤±è´¥
                     return false;
                 }
                 root_->ptrs[i1] = mid_node;
             }
 
-            // È·±£Ò¶½ÚµãÒÑ·ÖÅä
+            // ç¡®ä¿å¶èŠ‚ç‚¹å·²åˆ†é…
             if (root_->ptrs[i1]->ptrs[i2] == NULL) {
                 Leaf* leaf = _LeafObjPool.New();
-                if (leaf == NULL) {  // ÄÚ´æ·ÖÅäÊ§°Ü
+                if (leaf == NULL) {  // å†…å­˜åˆ†é…å¤±è´¥
                     return false;
                 }
-                memset(leaf, 0, sizeof(*leaf));  // ĞŞÕı£ºÔ­´úÂëÓÃ sizeof(leaf)£¨Ö¸Õë´óĞ¡£©£¬Ó¦Îª sizeof(*leaf)
-                // ½«Ò¶½ÚµãÖ¸Õë´æÈëÖĞ¼ä½Úµã£¨Ç¿ÖÆ×ª»»Îª Node* ÀàĞÍ´æ´¢£©
+                memset(leaf, 0, sizeof(*leaf));  // ä¿®æ­£ï¼šåŸä»£ç ç”¨ sizeof(leaf)ï¼ˆæŒ‡é’ˆå¤§å°ï¼‰ï¼Œåº”ä¸º sizeof(*leaf)
+                // å°†å¶èŠ‚ç‚¹æŒ‡é’ˆå­˜å…¥ä¸­é—´èŠ‚ç‚¹ï¼ˆå¼ºåˆ¶è½¬æ¢ä¸º Node* ç±»å‹å­˜å‚¨ï¼‰
                 root_->ptrs[i1]->ptrs[i2] = reinterpret_cast<Node*>(leaf);
             }
 
-            // Ìø¹ıµ±Ç°Ò¶½Úµã¸²¸ÇµÄËùÓĞ¼ü£¨ÍÆ½øµ½ÏÂÒ»¸öÒ¶½ÚµãµÄÆğÊ¼¼ü£©
+            // è·³è¿‡å½“å‰å¶èŠ‚ç‚¹è¦†ç›–çš„æ‰€æœ‰é”®ï¼ˆæ¨è¿›åˆ°ä¸‹ä¸€ä¸ªå¶èŠ‚ç‚¹çš„èµ·å§‹é”®ï¼‰
             key = ((key >> LEAF_BITS) + 1) << LEAF_BITS;
         }
         return true;
