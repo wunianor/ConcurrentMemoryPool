@@ -1,6 +1,7 @@
 #include "SpanList.h"
 
 
+
 FixedSizeMemoryPool<SpanNode> spanNodeObjPool;
 
 SpanList::SpanList()
@@ -12,11 +13,11 @@ SpanList::SpanList()
 
 
 /// <summary>
-/// ÉêÇëËø
+/// ç”³è¯·é”
 /// 
-/// ×¢Òâ:
-/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+/// æ³¨æ„:
+/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´lock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 /// </summary>
 void SpanList::lock() 
 {
@@ -25,11 +26,11 @@ void SpanList::lock()
 
 
 /// <summary>
-/// ÊÍ·ÅËø
+/// é‡Šæ”¾é”
 /// 
-/// ×¢Òâ:
-/// .hºÍ.cpp·ÖÀë»áµ¼ÖÂunlock()²»ÊÇinlineµÄ,¶ÔĞÔÄÜÓ°Ïì²»´ó;
-/// µ«ÊÇ,Èç¹ûÊÇinlineµÄ»°,vs2022µÄĞÔÄÜ¼àÊÓÆ÷ÏÔÊ¾²»³ö¸Ãº¯ÊıµÄ×ÜÖ´ĞĞÊ±¼ä
+/// æ³¨æ„:
+/// .hå’Œ.cppåˆ†ç¦»ä¼šå¯¼è‡´unlock()ä¸æ˜¯inlineçš„,å¯¹æ€§èƒ½å½±å“ä¸å¤§;
+/// ä½†æ˜¯,å¦‚æœæ˜¯inlineçš„è¯,vs2022çš„æ€§èƒ½ç›‘è§†å™¨æ˜¾ç¤ºä¸å‡ºè¯¥å‡½æ•°çš„æ€»æ‰§è¡Œæ—¶é—´
 /// </summary>
 void SpanList::unlock()
 {
@@ -38,10 +39,10 @@ void SpanList::unlock()
 
 
 /// <summary>
-/// ÔÚposºóÃæ²åÈëÒ»¸ö½Úµã
+/// åœ¨posåé¢æ’å…¥ä¸€ä¸ªèŠ‚ç‚¹
 /// </summary>
-/// <param name="pos">²åÈëÎ»ÖÃ</param>
-/// <param name="newNode">²åÈë½Úµã</param>
+/// <param name="pos">æ’å…¥ä½ç½®</param>
+/// <param name="newNode">æ’å…¥èŠ‚ç‚¹</param>
 void SpanList::insert(SpanNode* pos, SpanNode* newNode)
 {
 	assert(pos);
@@ -58,9 +59,9 @@ void SpanList::insert(SpanNode* pos, SpanNode* newNode)
 
 
 /// <summary>
-/// Í·²åÒ»¸öSpanNode
+/// å¤´æ’ä¸€ä¸ªSpanNode
 /// </summary>
-/// <param name="newNode">´ı²åÈë½áµã</param>
+/// <param name="newNode">å¾…æ’å…¥ç»“ç‚¹</param>
 void SpanList::pushFront(SpanNode* newNode)
 {
 	insert(begin(), newNode);
@@ -69,9 +70,9 @@ void SpanList::pushFront(SpanNode* newNode)
 
 
 /// <summary>
-/// É¾³ıposÎ»ÖÃµÄspanNode
+/// åˆ é™¤posä½ç½®çš„spanNode
 /// </summary>
-/// <param name="pos">ĞèÒªÉ¾³ıµÄÎ»ÖÃ</param>
+/// <param name="pos">éœ€è¦åˆ é™¤çš„ä½ç½®</param>
 void SpanList::erase(SpanNode* pos)
 {
 	assert(nullptr != pos);
@@ -86,9 +87,9 @@ void SpanList::erase(SpanNode* pos)
 
 
 /// <summary>
-/// Í·É¾(»ñÈ¡)Ò»¸öSpanNode
+/// å¤´åˆ (è·å–)ä¸€ä¸ªSpanNode
 /// </summary>
-/// <returns>·µ»ØÒ»¸öSpanNode</returns>
+/// <returns>è¿”å›ä¸€ä¸ªSpanNode</returns>
 SpanNode* SpanList::popFront()
 {
 	assert(begin() != _head);
@@ -100,11 +101,11 @@ SpanNode* SpanList::popFront()
 
 
 /// <summary>
-	/// »ñÈ¡¶ÔÏóÊÇ·ñÎª¿Õ
+	/// è·å–å¯¹è±¡æ˜¯å¦ä¸ºç©º
 	/// </summary>
 	/// <returns>
-	/// true,±íÊ¾Îª¿Õ;
-	/// false,±íÊ¾²»Îª¿Õ
+	/// true,è¡¨ç¤ºä¸ºç©º;
+	/// false,è¡¨ç¤ºä¸ä¸ºç©º
 	/// </returns>
 bool SpanList::empty()
 {
@@ -112,18 +113,18 @@ bool SpanList::empty()
 }
 
 /// <summary>
-/// ·µ»Øbegin()µü´úÆ÷
+/// è¿”å›begin()è¿­ä»£å™¨
 /// </summary>
-/// <returns>·µ»Øbegin()µü´úÆ÷</returns>
+/// <returns>è¿”å›begin()è¿­ä»£å™¨</returns>
 SpanNode* SpanList::begin()
 {
 	return _head->_next;
 }
 
 /// <summary>
-/// ·µ»Øend()µü´úÆ÷
+/// è¿”å›end()è¿­ä»£å™¨
 /// </summary>
-/// <returns>·µ»Øend()µü´úÆ÷</returns>
+/// <returns>è¿”å›end()è¿­ä»£å™¨</returns>
 SpanNode* SpanList::end()
 {
 	return _head;
