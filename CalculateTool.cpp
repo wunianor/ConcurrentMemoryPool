@@ -1,25 +1,25 @@
 #include "CalculateTool.h"
 
-
+//transcode to utf8
 
 /// <summary>
-/// ¼ÆËã¶ÔÓÚbytes¶ÔÆëÖ®ºóµÄ×Ö½ÚÊı
+/// è®¡ç®—å¯¹äºbyteså¯¹é½ä¹‹åçš„å­—èŠ‚æ•°
 /// </summary>
-/// <param name="bytes">×Ö½ÚÊı</param>
-/// <param name="alignedSize">¶ÔÆë×Ö½ÚÊı</param>
-/// <returns>·µ»Ø¶ÔÓÚbytes¶ÔÆëÖ®ºóµÄ×Ö½ÚÊı</returns>
+/// <param name="bytes">å­—èŠ‚æ•°</param>
+/// <param name="alignedSize">å¯¹é½å­—èŠ‚æ•°</param>
+/// <returns>è¿”å›å¯¹äºbyteså¯¹é½ä¹‹åçš„å­—èŠ‚æ•°</returns>
 size_t CalculateTool::_calculateAlignedBytes(size_t bytes, size_t alignedSize)
 {
-	//µÈ¼ÛÓÚ((bytes-1)/aligendSize+1)*aligendSize;
+	//ç­‰ä»·äº((bytes-1)/aligendSize+1)*aligendSize;
 	return (bytes - 1 + alignedSize) & (~(alignedSize - 1));
 }
 
 /// <summary>
-/// ¼ÆËãbytes×Ö½ÚÊıÔÚÄÄ¸öÍ°(Á´±í)ÄÚ,·µ»ØÆäË÷Òı
+/// è®¡ç®—byteså­—èŠ‚æ•°åœ¨å“ªä¸ªæ¡¶(é“¾è¡¨)å†…,è¿”å›å…¶ç´¢å¼•
 /// </summary>
-/// <param name="bytes">×Ö½ÚÊı</param>
-/// <param name="alignedShift">log2(¶ÔÆë×Ö½ÚÊıalignedSize)</param>
-/// <returns>·µ»Øbytes¶ÔÓ¦Í°(Á´±í)µÄË÷Òı</returns>
+/// <param name="bytes">å­—èŠ‚æ•°</param>
+/// <param name="alignedShift">log2(å¯¹é½å­—èŠ‚æ•°alignedSize)</param>
+/// <returns>è¿”å›byteså¯¹åº”æ¡¶(é“¾è¡¨)çš„ç´¢å¼•</returns>
 size_t CalculateTool::_calculateIndex(size_t bytes, size_t alignedShift)
 {
 	return ((bytes + (1LL << alignedShift) - 1) >> alignedShift) - 1;
@@ -28,10 +28,10 @@ size_t CalculateTool::_calculateIndex(size_t bytes, size_t alignedShift)
 
 
 /// <summary>
-/// ¼ÆËã¶ÔÓÚbytes¶ÔÆëÖ®ºóµÄ×Ö½ÚÊı
+/// è®¡ç®—å¯¹äºbyteså¯¹é½ä¹‹åçš„å­—èŠ‚æ•°
 /// </summary>
-/// <param name="bytes">×Ö½ÚÊı</param>
-/// <returns>·µ»Ø¶ÔÓÚbytes¶ÔÆëÖ®ºóµÄ×Ö½ÚÊı</returns>
+/// <param name="bytes">å­—èŠ‚æ•°</param>
+/// <returns>è¿”å›å¯¹äºbyteså¯¹é½ä¹‹åçš„å­—èŠ‚æ•°</returns>
 size_t CalculateTool::calculateAlignedBytes(size_t bytes)
 {
 	if (bytes <= 128)
@@ -64,10 +64,10 @@ size_t CalculateTool::calculateAlignedBytes(size_t bytes)
 
 
 /// <summary>
-/// ¼ÆËãbytes¶ÔÓ¦Í°(Á´±í)µÄË÷Òı
+/// è®¡ç®—byteså¯¹åº”æ¡¶(é“¾è¡¨)çš„ç´¢å¼•
 /// </summary>
-/// <param name="bytes">×Ö½ÚÊı</param>
-/// <returns>·µ»Øbytes¶ÔÓ¦Í°(Á´±í)µÄË÷Òı</returns>
+/// <param name="bytes">å­—èŠ‚æ•°</param>
+/// <returns>è¿”å›byteså¯¹åº”æ¡¶(é“¾è¡¨)çš„ç´¢å¼•</returns>
 size_t CalculateTool::calculateIndex(size_t bytes)
 {
 	static size_t groupArray[4] = { 16, 56, 56, 56 };
@@ -102,18 +102,18 @@ size_t CalculateTool::calculateIndex(size_t bytes)
 
 
 /// <summary>
-/// ¸ù¾İ¶ÔÆëºóµÄ×Ö½ÚÊı,¼ÆËãÅúÁ¿»ñÈ¡µÄËéÆ¬ÄÚ´æ¸öÊı
-/// alignedBytesÔ½´ó,Ô¤ÆÚ»ñÈ¡µ½µÄ¸öÊı¾ÍÔ½ÉÙ;
-///	alignedBytesÔ½Ğ¡,Ô¤ÆÚ»ñÈ¡µ½µÄ¸öÊı¾ÍÔ½¶à;
+/// æ ¹æ®å¯¹é½åçš„å­—èŠ‚æ•°,è®¡ç®—æ‰¹é‡è·å–çš„ç¢ç‰‡å†…å­˜ä¸ªæ•°
+/// alignedBytesè¶Šå¤§,é¢„æœŸè·å–åˆ°çš„ä¸ªæ•°å°±è¶Šå°‘;
+///	alignedBytesè¶Šå°,é¢„æœŸè·å–åˆ°çš„ä¸ªæ•°å°±è¶Šå¤š;
 /// </summary>
-/// <param name="alignedBytes">¶ÔÆëºóµÄ×Ö½ÚÊı</param>
+/// <param name="alignedBytes">å¯¹é½åçš„å­—èŠ‚æ•°</param>
 /// <returns></returns>
 size_t CalculateTool::calculateFetchFragmentedMemoryNum(size_t alignedBytes)
 {
 	assert(alignedBytes <= THREAD_CACHE_MAX_ALLOCATE_BYTES);
 
-	//¶ÔÆëºóµÄ×Ö½ÚÊıÔ½´ó,»ñÈ¡µÄËéÆ¬ÄÚ´æ¸öÊı(fetchNum)¾ÍÔ½ÉÙ,
-	//fetchNumµÄÈ¡Öµ·¶Î§[2,512]
+	//å¯¹é½åçš„å­—èŠ‚æ•°è¶Šå¤§,è·å–çš„ç¢ç‰‡å†…å­˜ä¸ªæ•°(fetchNum)å°±è¶Šå°‘,
+	//fetchNumçš„å–å€¼èŒƒå›´[2,512]
 	size_t fetchNum = THREAD_CACHE_MAX_ALLOCATE_BYTES / alignedBytes;
 	if (fetchNum < 2)
 	{
@@ -129,19 +129,19 @@ size_t CalculateTool::calculateFetchFragmentedMemoryNum(size_t alignedBytes)
 
 
 /// <summary>
-/// ¸ù¾İ¶ÔÆëºóµÄ×Ö½ÚÊı¼ÆËã·ÖÅä¶àÉÙ¸öPage(Ò»¸öPage8KB)
+/// æ ¹æ®å¯¹é½åçš„å­—èŠ‚æ•°è®¡ç®—åˆ†é…å¤šå°‘ä¸ªPage(ä¸€ä¸ªPage8KB)
 /// </summary>
-/// <param name="alignedBytes">¶ÔÆëºóµÄ×Ö½ÚÊı</param>
-/// <returns>·µ»ØĞèÒª·ÖÅä¶àÉÙ¸öPage</returns>
+/// <param name="alignedBytes">å¯¹é½åçš„å­—èŠ‚æ•°</param>
+/// <returns>è¿”å›éœ€è¦åˆ†é…å¤šå°‘ä¸ªPage</returns>
 size_t CalculateTool::calculateFetchPageNum(size_t alignedBytes)
 {
-	//ÉêÇëÒ»´Î»áÅúÁ¿»ñÈ¡¶àÉÙ¸öËéÆ¬ÄÚ´æ
+	//ç”³è¯·ä¸€æ¬¡ä¼šæ‰¹é‡è·å–å¤šå°‘ä¸ªç¢ç‰‡å†…å­˜
 	size_t fragmentedMemoryNum = calculateFetchFragmentedMemoryNum(alignedBytes);
 
-	//ÅúÁ¿»ñÈ¡µ½µÄËéÆ¬ÄÚ´æµÄ×Ü×Ö½ÚÊı
+	//æ‰¹é‡è·å–åˆ°çš„ç¢ç‰‡å†…å­˜çš„æ€»å­—èŠ‚æ•°
 	size_t fragmentedMemoryNumBytes = fragmentedMemoryNum * alignedBytes;
 
-	//¼ÆËãĞèÒªÉêÇëµÄÒ³Êı
+	//è®¡ç®—éœ€è¦ç”³è¯·çš„é¡µæ•°
 	size_t pageNum = fragmentedMemoryNumBytes >> PAGE_SHIFT;
 	if (pageNum == 0)
 	{
