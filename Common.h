@@ -1,5 +1,7 @@
 #pragma once
 
+//transcode to utf8
+
 #include <iostream>
 #include <unordered_map>
 #include <exception>
@@ -10,6 +12,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <errno.h>
+
 
 #if defined(_WIN32)
 	#include <windows.h>
@@ -30,28 +33,28 @@
 
 
 /// <summary>
-/// ËéÆ¬ÄÚ´æÁ´±íµÄ¸öÊı
+/// ç¢ç‰‡å†…å­˜é“¾è¡¨çš„ä¸ªæ•°
 /// </summary>
 const size_t FRAMENTED_MEMORY_LIST_NUM = 208;
 
 /// <summary>
-/// Í¨¹ıthreadCache×î´ó¿ÉÉêÇëÄÚ´æ->256KB
+/// é€šè¿‡threadCacheæœ€å¤§å¯ç”³è¯·å†…å­˜->256KB
 /// </summary>
 const size_t THREAD_CACHE_MAX_ALLOCATE_BYTES = 256 * 1024; 
 
 /// <summary>
-/// PageCacheÖĞspanListµÄ¸öÊı,
-/// Í¬Ê±Ò²ÊÇPageCacheÄÜ¹ÜÀíµÄspanNodeµÄ×î´ó_pageNum(º¬ÓĞpageµÄÊıÁ¿³¬¹ı´ËÖµµÄspanNode,²»ÓÉPageCache¹ÜÀí)
+/// PageCacheä¸­spanListçš„ä¸ªæ•°,
+/// åŒæ—¶ä¹Ÿæ˜¯PageCacheèƒ½ç®¡ç†çš„spanNodeçš„æœ€å¤§_pageNum(å«æœ‰pageçš„æ•°é‡è¶…è¿‡æ­¤å€¼çš„spanNode,ä¸ç”±PageCacheç®¡ç†)
 /// </summary>
 const size_t PAGE_CACHE_SPAN_LIST_NUM = 128;
 
 /// <summary>
-/// Ò»¸öspanNodeÄÚ×î¶àÄÜÓµÓĞµÄpageµÄÊıÁ¿
+/// ä¸€ä¸ªspanNodeå†…æœ€å¤šèƒ½æ‹¥æœ‰çš„pageçš„æ•°é‡
 /// </summary>
 const size_t MAX_PAGENUM_IN_SPANNODE = PAGE_CACHE_SPAN_LIST_NUM;
 
 /// <summary>
-/// log2(Ò»¸öÒ³µÄ´óĞ¡(8KB))
+/// log2(ä¸€ä¸ªé¡µçš„å¤§å°(8KB))
 /// </summary>
 const size_t PAGE_SHIFT = 13;
 
