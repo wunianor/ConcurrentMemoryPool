@@ -3,91 +3,92 @@
 #include "Common.h"
 
 
+
 /// <summary>
-/// ������Ƭ�ڴ�ڵ�洢����һ���ڴ�ڵ��ַ������
+/// 返回碎片内存节点存储的下一个内存节点地址的引用
 /// </summary>
-/// <param name="node">һ����Ƭ�ڴ�ĵ�ַ</param>
-/// <returns>������Ƭ�ڴ�ڵ�洢����һ���ڴ�ڵ��ַ������</returns>
+/// <param name="node">一块碎片内存的地址</param>
+/// <returns>返回碎片内存节点存储的下一个内存节点地址的引用</returns>
 void*& nextMemoryNode(void* node);
 
 
 
 /// <summary>
-/// ��Ƭ�ڴ�������
+/// 碎片内存链表类
 /// </summary>
 class FragmentedMemoryList
 {
 	/// <summary>
-	/// ��Ƭ�ڴ�������ͷ���
+	/// 碎片内存链表的头结点
 	/// </summary>
 	void* _head = nullptr;
 
 	/// <summary>
-	/// ��������Ƭ�ڴ������
+	/// 链表内碎片内存的数量
 	/// </summary>
 	size_t _size = 0;
 
 	/// <summary>
-	/// ��������һ�δ�CentralCache������ȡ��Ƭ�ڴ������
+	/// 该链表下一次从CentralCache批量获取碎片内存的数量
 	/// </summary>
 	size_t _nextFetchFragmentedMemoryNumFromCentralCache = 1;
 
 public:
 	
 	/// <summary>
-	/// ͷ��һ����Ƭ�ڴ�
+	/// 头插一个碎片内存
 	/// </summary>
-	/// <param name="fragmentedMemory">��Ƭ�ڴ�ĵ�ַ</param>
+	/// <param name="fragmentedMemory">碎片内存的地址</param>
 	void push(void* fragmentedMemory);
 
 	/// <summary>
-	/// ͷ��һ���ڴ���Ƭ,
-	/// ����ڴ���Ƭ�Ľṹ������
+	/// 头插一段内存碎片,
+	/// 这段内存碎片的结构是链表
 	/// </summary>
-	/// <param name="begin">�����ĵ�һ�����</param>
-	/// <param name="end">���������һ�����</param>
-	/// <param name="size">�����Ĵ�С</param>
+	/// <param name="begin">链表的第一个结点</param>
+	/// <param name="end">链表的最后一个结点</param>
+	/// <param name="size">链表的大小</param>
 	void pushRange(void* begin, void* end, size_t size);
 
 	/// <summary>
-	/// �������л�ȡ(ͷɾ)һ����Ƭ�ڴ�
+	/// 从链表中获取(头删)一个碎片内存
 	/// </summary>
 	/// <returns>
-	///  ��ͷ���Ϊnullptr,����nullptr;
-	///  ���򷵻�һ����Ƭ�ڴ�ĵ�ַ
+	///  若头结点为nullptr,返回nullptr;
+	///  否则返回一块碎片内存的地址
 	/// </returns>
 	void* pop();
 
 	/// <summary>
-	/// ��������ͷɾ(��ȡ)һ����������Ƭ�ڴ�,
-	/// ����end->next����Ϊnullptr
+	/// 从链表中头删(获取)一定数量的碎片内存,
+	/// 并且end->next会置为nullptr
 	/// </summary>
-	/// <param name="expectedNum">����ͷɾ(��ȡ)������</param>
-	/// <param name="start">����Ͳ���,��ȡ���������ĵ�һ�����</param>
-	/// <param name="end">����Ͳ���,��ȡ�������������һ�����</param>
-	/// <returns>����ʵ�ʻ�ȡ��������</returns>
+	/// <param name="expectedNum">期望头删(获取)的数量</param>
+	/// <param name="start">输出型参数,获取到的链表的第一个结点</param>
+	/// <param name="end">输出型参数,获取到的链表的最后一个结点</param>
+	/// <returns>返回实际获取到的数量</returns>
 	size_t popRange(size_t expectedNum, void*& start, void*& end);
 
 	/// <summary>
-	/// ��ȡ�����Ƿ�Ϊ��
+	/// 获取链表是否为空
 	/// </summary>
-	/// <returns>Ϊ��,����true;����,����false</returns>
+	/// <returns>为空,返回true;否则,返回false</returns>
 	bool empty();
 
 	/// <summary>
-	/// ����������Ϊ��״̬:��ͷָ����Ϊ nullptr,��С��Ϊ 0,�����´δ�CentralCache��ȡ��Ƭ���ڴ�ļ���������Ϊ 1
+	/// 将对象重置为空状态:将头指针置为 nullptr,大小置为 0,并将下次从CentralCache获取碎片化内存的计数器重置为 1
 	/// </summary>
 	void setEmpty();
 
 	/// <summary>
-	/// ��ȡ��������Ƭ�ڴ������
+	/// 获取链表内碎片内存的数量
 	/// </summary>
-	/// <returns>������������Ƭ�ڴ������</returns>
+	/// <returns>返回链表内碎片内存的数量</returns>
 	size_t size();
 
 	/// <summary>
-	/// ��ȡ��һ�δ�CentralCache������ȡ��Ƭ�ڴ������������
+	/// 获取下一次从CentralCache批量获取碎片内存的数量的引用
 	/// </summary>
-	/// <returns>������һ�δ�CentralCache������ȡ��Ƭ�ڴ������������</returns>
+	/// <returns>返回下一次从CentralCache批量获取碎片内存的数量的引用</returns>
 	size_t& nextFetchFragmentedMemoryNumFromCentralCache();
 };
